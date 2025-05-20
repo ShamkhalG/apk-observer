@@ -2,73 +2,47 @@ from rich.live import Live
 from rich.table import Table
 from rich.columns import Columns
 
-import json
+import multiprocessing as mp
 from time import sleep
+from virus_scan import vs_main
+from test_apk import ta_main
 
-def init_stats():
+def init_stats() -> tuple[dict, dict]:
     """
-    Resets stats.json to default zeroed values.
-    """
-
-    default_stats = {
-        "test": {
-            "current": "N/A",
-            "launched": 0,
-            "crashed": 0,
-            "total": 0
-        },
-        "virus_scan": {
-            "current": "N/A",
-            "benign": 0,
-            "suspicious": 0,
-            "malicious": 0,
-            "total": 0
-        }
-    }
-
-    with open("stats.json", "w") as f:
-        json.dump(default_stats, f, indent = 4)
-
-
-def get_test_stats() -> dict:
-    """
-    Retrieves stats for test_apk.py.
+    Initializes stats to default zeroed values.
 
     Returns:
-        test_stats (JSON object): test_apk.py stats
+        tuple:
+            - **test_stats** (dict): Stats for APK Test.
+            - **scan_stats** (dict): Stats for Virus Scan.
     """
 
-    try:
-        with open("stats.json", "r") as f:
-            result = json.load(f)
-            return result.get("test")
-    except Exception:
-        return {}
+    test_stats = {        
+        "current": "N/A",
+        "launched": 0,
+        "crashed": 0,
+        "total": 0
+    }
+    
+    scan_stats = {
+        "current": "N/A",
+        "benign": 0,
+        "suspicious": 0,
+        "malicious": 0,
+        "total": 0
+    }
 
-def get_scan_stats() -> dict:
-    """
-        Retrieves stats for virus_scan.py.
-
-        Returns:
-            scan_stats (JSON object): virus_scan.py stats
-    """
-
-    try:
-        with open("stats.json", "r") as f:
-            result = json.load(f)
-            return result.get("virus_scan")
-    except Exception:
-        return {}
+    return (test_stats, scan_stats)
 
 def make_test_table(stats):
     """
-    Writes down test_apk.py stats to the TUI
+    Writes down APK tester stats to the TUI.
 
     Args:
-        stats (JSON object): test_apk.py stats
+        stats (dict): test_apk.py stats.
     """
     
-    table = Table(title = "APK testing stats")
+    table = Table(title = "APK tester")
     table.add_column("Metric")
     table.add_column("Value")
 
@@ -80,13 +54,13 @@ def make_test_table(stats):
 
 def make_scan_table(stats):
     """
-    Writes down virus_scan.py stats to the TUI
+    Writes down Virus Scanner stats to the TUI.
 
     Args:
-        stats (JSON object): virus_scan.py stats
+        stats (dict): virus_scan.py stats.
     """
 
-    table = Table(title = "Virus Scan stats")
+    table = Table(title = "Virus scanner")
     table.add_column("Metric")
     table.add_column("Value")
 
@@ -98,14 +72,40 @@ def make_scan_table(stats):
     return table
 
 # ////////////////////////////////////
-# /////////////// MAIN ///////////////
+# ///////// ENTRY POINT MAIN /////////
 # ////////////////////////////////////
 
-init_stats()
+if __name__ == "__main__":
+    # Creates pipes between tui and its child processes
+    tui_vs_conn, vs_conn = mp.Pipe()
+    tui_at_conn, at_conn = mp.Pipe()
+    
+    # Creates the child processes and starts them
+    vs = mp.Process(target = vs_main, args = (vs_conn,))
+    ta = mp.Process(target = ta_main, args = (at_conn,))
+    vs.start()
+    ta.start()
 
-with Live(Columns([make_test_table({}), make_scan_table({})]), refresh_per_second = 2) as live:
-    # while True:
-    test_stats = get_test_stats()
-    scan_stats = get_scan_stats()
-    live.update(Columns([make_test_table(test_stats), make_scan_table(scan_stats)]))
-    sleep(0.5)
+    test_stats, scan_stats = init_stats()
+    finished = [False, False] # I - APK tester, II - Virus scanner
+
+    with Live(Columns([make_test_table({}), make_scan_table({})]), refresh_per_second = 4) as live:
+        while finished[0] == False or finished[1] == False:
+            # APK Tester
+            if not finished[0]:
+                if tui_at_conn.poll(0.5): # Checks for sent data
+                    key, value = tui_at_conn.recv() # Retrieves updated data
+                    if value == "Finished testing all APKs.":
+                        finished[0] = True
+                    test_stats[key] = value # Updates stats
+
+            # Virus Scanner
+            if not finished[1]:
+                if tui_vs_conn.poll(0.5):
+                    key, value = tui_vs_conn.recv()
+                    if value == "Finished scanning all APKs.":
+                        finished[1] = True
+                    scan_stats[key] = value
+
+            live.update(Columns([make_test_table(test_stats), make_scan_table(scan_stats)]))
+            sleep(0.5)

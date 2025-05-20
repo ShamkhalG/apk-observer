@@ -1,3 +1,7 @@
 config.ini
 instructions.md
 latest.csv
+
+scan.apk
+test.apk
+results.db

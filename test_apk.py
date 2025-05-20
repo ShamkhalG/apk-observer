@@ -35,7 +35,7 @@ def get_sdk_info() -> dict:
 
         return sdk_info
     except sp.CalledProcessError:
-        print(f"ERROR: Failed to retrieve SDK versions.")
+        connection.send(("current", f"ERROR: Failed to retrieve SDK versions."))
 
 def get_package_name(apk_path: str) -> str:
     """
@@ -74,11 +74,11 @@ def get_native_libs(apk_path: str) -> list[str] | list:
                     native_libs.append(entry)
         return native_libs
     except FileNotFoundError:
-        print("ERROR: APK file not found.")
+        connection.send(("current", "ERROR: APK file not found."))
     except PermissionError:
-        print("ERROR: Permission denied to open the APK file.")
+        connection.send(("current", "ERROR: Permission denied to open the APK file."))
     except zp.BadZipFile:
-        print("ERROR: APK file is not a valid zip file.")
+        connection.send(("current", "ERROR: APK file is not a valid zip file."))
 
     return ["ERROR"]
 
@@ -86,45 +86,56 @@ def get_native_libs(apk_path: str) -> list[str] | list:
 # ////////////////////////////////////
 # /////////////// MAIN ///////////////
 # ////////////////////////////////////
-app_number = 1
+connection = None
 
-while app_number <= MAX_APK_NB:
-    try:
-        # Downloads the APK
-        sha256_hash, apk_path = download_apk(app_number, "test.apk")
-        
-        # Retrieves package name
-        package_name = get_package_name(apk_path)
+def ta_main(conn):
+    # Making the connection global to all functions
+    global connection
+    connection = conn
 
-        # Retrieves SDK versions and shows them
-        sdk_info = get_sdk_info()
+    app_number = 1
 
-        # Launches corresponding Android emulator
-        launch_emulator(sdk_info)
+    while app_number <= MAX_APK_NB:
+        try:
+            # Downloads the APK
+            apk_path = "test.apk"
+            sha256_hash = download_apk(app_number, apk_path, connection)
+            
+            # Retrieves package name
+            package_name = get_package_name(apk_path)
 
-        # Installs, runs the app, and does the health check
-        app_launch_main(apk_path, package_name)
+            # Retrieves SDK versions and shows them
+            sdk_info = get_sdk_info()
 
-        # Retrieves native libraries that the app uses
-        native_libs = get_native_libs(apk_path)
+            # Launches corresponding Android emulator
+            launch_emulator(sdk_info, connection)
 
-        data = {
-            "apk_name": package_name,
-            "sha256_hash": sha256_hash,
-            "min_sdk_version": sdk_info["min"],
-            "sdk_version": sdk_info["target"],
-            "max_sdk_version": sdk_info["max"],
-            "native_libs": ", ".join(native_libs) if native_libs else "", # If list is empty, put empty string
-            "scan_label": "PENDING",
-            "positives": "PENDING",
-            "total_engines": "PENDING",
-            "scan_time": "PENDING"
-        }
+            # Installs, runs the app, and does the health check
+            app_launch_main(apk_path, package_name, connection)
 
-        # Updates the database
-        db_main(data)
+            # Retrieves native libraries that the app uses
+            native_libs = get_native_libs(apk_path)
 
-    except RuntimeError as e:
-        print(e)
-    finally:
-        app_number += 1
+            data = {
+                "apk_name": package_name,
+                "sha256_hash": sha256_hash,
+                "min_sdk_version": sdk_info["min"],
+                "sdk_version": sdk_info["target"],
+                "max_sdk_version": sdk_info["max"],
+                "native_libs": ", ".join(native_libs) if native_libs else "", # If list is empty, put empty string
+                "scan_label": "PENDING",
+                "positives": "PENDING",
+                "total_engines": "PENDING",
+                "scan_time": "PENDING"
+            }
+
+            # Updates the database
+            db_main(data, connection)
+
+        except RuntimeError as e:
+            connection.send(("current", e))
+        finally:
+            app_number += 1
+
+    connection.send(("current", "Finished testing all APKs."))
+    connection.close()

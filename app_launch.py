@@ -23,13 +23,13 @@ def check_emulator():
     try:
         result = sp.run([ADB_PATH, "get-state"], stdout = sp.PIPE, stderr = sp.STDOUT, text = True) # "adb get-state"
         if result.stdout.strip() != "device": # "device" means the emulator is running
-            print("ERROR: No running emulator detected.")
+            connection.send(("current", "ERROR: No running emulator detected."))
             sys.exit(1)
     except sp.CalledProcessError as e:
-        print(f"ERROR: Failed to execute 'adb get-state' for checking the emulator: {e.output}")
+        connection.send(("current", f"ERROR: Failed to execute 'adb get-state' for checking the emulator: {e.output}"))
         sys.exit(1)
     except Exception as e:
-        print(f"ERROR: Unexpected failure while checking the emulator: {e}")
+        connection.send(("current", f"ERROR: Unexpected failure while checking the emulator: {e}"))
         sys.exit(1)
 
 def install_apk(apk_path: str):
@@ -43,10 +43,10 @@ def install_apk(apk_path: str):
     try:
         sp.run([ADB_PATH, "install", "-r", apk_path], stdout = sp.PIPE, stderr = sp.STDOUT, text = True, check = True)
     except sp.CalledProcessError as e:
-        print(f"ERROR: Failed to execute 'adb install': {e.output}")
+        connection.send(("current", f"ERROR: Failed to execute 'adb install': {e.output}"))
         sys.exit(1)
     except Exception as e:
-        print(f"ERROR: Unexpected failure while installing the APK: {e}")
+        connection.send(("current", f"ERROR: Unexpected failure while installing the APK: {e}"))
         sys.exit(1)
 
 def launch_app(package_name: str):
@@ -61,10 +61,10 @@ def launch_app(package_name: str):
         # Launches the app
         sp.run([ADB_PATH, "shell", "monkey", "-p", package_name, "-c", "android.intent.category.LAUNCHER", "1"], stdout = sp.PIPE, stderr = sp.STDOUT, text = True, check = True)
     except sp.CalledProcessError as e:
-        print(f"ERROR: Failed to execute 'adb shell monkey': {e.output}")
+        connection.send(("current", f"ERROR: Failed to execute 'adb shell monkey': {e.output}"))
         sys.exit(1)
     except Exception as e:
-        print(f"ERROR: Unexpected failure while launching the app: {e}")
+        connection.send(("current", f"ERROR: Unexpected failure while launching the app: {e}"))
         sys.exit(1)
 
 def check_installation(package_name: str):
@@ -80,13 +80,13 @@ def check_installation(package_name: str):
         if package_name not in result.stdout:
             raise RuntimeError("ERROR: Package is NOT installed.")
     except sp.CalledProcessError as e:
-        print(f"ERROR: Failed to execute 'adb shell pm list packages': {e.output}")
+        connection.send(("current", f"ERROR: Failed to execute 'adb shell pm list packages': {e.output}"))
         sys.exit(1)
     except Exception as e:
-        print(f"ERROR: Unexpected failure while checking for installation: {e}")
+        connection.send(("current", f"ERROR: Unexpected failure while checking for installation: {e}"))
         sys.exit(1)
 
-    print("\nApp is successfully installed.")
+    connection.send(("current", "App is successfully installed."))
 
 def check_crash_log(package_name: str):
     """
@@ -111,10 +111,10 @@ def check_crash_log(package_name: str):
             raise RuntimeError("\nError: App crashed.\n")
 
     except sp.CalledProcessError as e:
-        print(f"ERROR: Failed to execute 'adb logcat -t 0': {e.output}")
+        connection.send(("current", f"ERROR: Failed to execute 'adb logcat -t 0': {e.output}"))
         sys.exit(1)
     except Exception as e:
-        print(f"ERROR: Unexpected failure while checking for crash logs: {e}")
+        connection.send(("current", f"ERROR: Unexpected failure while checking for crash logs: {e}"))
         sys.exit(1)
 
 def check_app_pid(package_name: str):
@@ -132,23 +132,31 @@ def check_app_pid(package_name: str):
         if not pid: # No PID = App not running
             raise RuntimeError("\nError: App is not running.\n")
         else:
-            print(f"App is running. PID: {pid}")
-            print("Health check passed. App installed, running, and stable.\n")
+            connection.send(("current", "Health check passed."))
     except sp.CalledProcessError as e:
-        print(f"ERROR: Failed to execute 'adb shell pidof': {e.output}")
+        connection.send(("current", f"ERROR: Failed to execute 'adb shell pidof': {e.output}"))
         sys.exit(1)
     except Exception as e:
-        print(f"ERROR: Unexpected failure while checking for PID: {e}")
+        connection.send(("current", f"ERROR: Unexpected failure while checking for PID: {e}"))
         sys.exit(1)
     
-def app_launch_main(apk_path: str, package_name: str):
+# ////////////////////////////////////
+# /////////////// MAIN ///////////////
+# ////////////////////////////////////
+connection = None
+
+def app_launch_main(apk_path: str, package_name: str, conn):
     """
     Installs, runs the app, and does the health check.
 
     Args:
         apk_path (str): APK path.
         package_name (str): Package name of the APK.
+        conn (Connection): Pipe connection for sending data.
     """
+
+    global connection
+    connection = conn
 
     # Checks if APK file is there
     check_apk_exists(apk_path)
@@ -157,11 +165,11 @@ def app_launch_main(apk_path: str, package_name: str):
     check_emulator()
 
     # Installs the APK
-    print("Installing APK...")
+    connection.send(("current", "Installing APK..."))
     install_apk(apk_path)
 
     # Launches the app
-    print("Launching app...")
+    connection.send(("current", "Launching app..."))
     launch_app(package_name)
     sleep(2) # Gives a little time for the app to launch completely
 

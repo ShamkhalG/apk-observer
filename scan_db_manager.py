@@ -40,7 +40,7 @@ def insert_row(cursor, connection, data: dict):
 # ////////////////////////////////////
 # /////////////// MAIN ///////////////
 # ////////////////////////////////////
-def db_main(data):
+def db_main(data, pipe_connection):
     # Generates timestamp for scan
     scan_time = datetime.now(timezone.utc).isoformat()
     data["scan_time"] = scan_time
@@ -54,7 +54,7 @@ def db_main(data):
 
     # Inserts the data for a file
     insert_row(cursor, connection, data)
-    print("\nScan results were successfully added to the database.")
+    pipe_connection.send(("current", "Scan results were successfully\nadded to the database."))
 
     # Closes connection
     connection.close()

@@ -30,23 +30,23 @@ def check_scan(sha256_hash: str):
 
             # 4 requests per minute limit is reached
             if response.status_code == 204:
-                print("4 requests per minute limit hit. Waiting before retrying...")
+                connection.send(("current", "4 requests per minute limit hit.\nWaiting before retrying..."))
                 time.sleep(COOLDOWN)
                 cur_attempt += 1
                 continue
 
             # HTTP error
             if response.status_code != 200:
-                print(f"HTTP error {response.status_code}: {response.text}")
+                connection.send(("current", f"HTTP error {response.status_code}: {response.text}"))
                 sys.exit(1)
 
             return response.json()
         except requests.RequestException as e:
-            print(f"Request failed: {e}")
+            connection.send(("current", f"ERROR: Request to Virus Total failed: {e}"))
             sys.exit(1)
     
     # 500 requests per day limit is reached
-    print("ERROR: Maximum number of requests to VirusTotal per day has been reached. Terminating the program.")
+    connection.send(("current", "ERROR: Maximum number of requests per day\nto VirusTotal has been reached. Quitting."))
     sys.exit(1)
 
 def upload_file(apk_path: str):
@@ -59,15 +59,14 @@ def upload_file(apk_path: str):
         response (JSON object): Response in Pickle format.
     """
 
-    print("File not found in Virus Total. Uploading for scan...")
+    connection.send(("current", "File not found in Virus Total.\nUploading for scan..."))
     try:
         with open(apk_path, 'rb') as f:
             files = {'file': (apk_path, f)}
             response = requests.post(API_SCAN_URL, files = files, params = {'apikey': API_KEY}, timeout = 30)
             return response.json()
     except Exception as e:
-        print(f"Upload failed: {e}", file=sys.stderr)
-        sys.exit(1)
+        raise RuntimeError(f"ERROR: Upload failed: {e}")
 
 def scan_file(scan_id: str):
     """
@@ -79,20 +78,19 @@ def scan_file(scan_id: str):
         result (JSON object): Scan results.
     """
 
-    print(f"Scan ID: {scan_id}")
-    print("Waiting for scan results...")
-    for attempt in range(12):  # Waits 60 seconds
+    connection.send(("current", "Waiting for scan results..."))
+    for _ in range(12):  # Waits 60 seconds
         try:
             time.sleep(5)
-            poll_response = requests.get(API_REPORT_URL, params={'apikey': API_KEY, 'resource': scan_id}, timeout = 10)
+            poll_response = requests.get(API_REPORT_URL, params = {'apikey': API_KEY, 'resource': scan_id}, timeout = 10)
             report = poll_response.json()
             
             if report.get("response_code") == 1: # Scan completed
-                return result
+                return report
         except Exception as e:
-            print(f"Error: {e}")
+            raise RuntimeError(f"ERROR: in scan_file: {e}")
     else:
-        print("Timed out waiting for scan results.")
+        connection.send(("current", "ERROR: Timed out waiting for scan results."))
         sys.exit(1)
 
 def get_label(positives: int) -> str:
@@ -116,39 +114,53 @@ def get_label(positives: int) -> str:
 # ////////////////////////////////////
 # /////////////// MAIN ///////////////
 # ////////////////////////////////////
-app_number = 1
+connection = None
 
-while app_number <= MAX_APK_NB_VS:
-    # Retrieves the APK file from input
-    sha256_hash, apk_path = download_apk(app_number, "scan.apk")
+def vs_main(conn):
+    # Making the connection global to all functions
+    global connection
+    connection = conn
 
-    # Checks if the file is already scanned in VirusTotal
-    result = check_scan(sha256_hash)
+    app_number = 1
 
-    # File is not scanned
-    if result.get("response_code") != 1:
-        # Uploads the file for scanning
-        upload_result = upload_file(apk_path)
-        scan_id = upload_result.get("scan_id")
-        if not scan_id:
-            print("Failed to get scan ID.")
-            sys.exit(1)
-            
-        # Waits for scan results and retrieves them
-        result = scan_file(scan_id)
-        
-    positives = result.get("positives", 0)
-    total = result.get("total", 0)
-    label = get_label(positives)
+    while app_number <= MAX_APK_NB_VS:
+        try:
+            # Retrieves the APK file from input
+            apk_path = "scan.apk"
+            sha256_hash = download_apk(app_number, apk_path, connection)
 
-    scan_data = {
-        "sha256_hash": sha256_hash,
-        "scan_label": label,
-        "positives": positives,
-        "total_engines": total,
-    }
+            # Checks if the file is already scanned in VirusTotal
+            result = check_scan(sha256_hash)
 
-    # Updates the database
-    db_main(scan_data)
+            # File is not scanned
+            if result.get("response_code") != 1:
+                # Uploads the file for scanning
+                upload_result = upload_file(apk_path)
+                scan_id = upload_result.get("scan_id")
+                if not scan_id:
+                    connection.send(("current", "ERROR: Failed to get scan ID."))
+                    sys.exit(1)
+                    
+                # Waits for scan results and retrieves them
+                result = scan_file(scan_id)
+                
+            positives = result.get("positives", 0)
+            total = result.get("total", 0)
+            label = get_label(positives)
 
-    app_number += 1
+            scan_data = {
+                "sha256_hash": sha256_hash,
+                "scan_label": label,
+                "positives": positives,
+                "total_engines": total,
+            }
+
+            # Updates the database
+            db_main(scan_data, connection)
+        except RuntimeError as e:
+            connection.send(("current", e))
+        finally:
+            app_number += 1
+    
+    connection.send(("current", "Finished scanning all APKs."))
+    connection.close()

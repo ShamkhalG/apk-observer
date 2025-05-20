@@ -20,31 +20,35 @@ def retrieve_hash(app_number: int) -> str:
                 if i == app_number:
                     return row[0] # SHA-256 is in first column
     except FileNotFoundError:
-        print("ERROR: 'latest.csv' file not found.")
+        connection.send(("current", "ERROR: 'latest.csv' file not found."))
         sys.exit(1)
 
-def download_apk(app_number: int, apk_path: str) -> tuple[str, str]:
+connection = None
+
+def download_apk(app_number: int, apk_path: str, conn) -> str:
     """
     Downloads APK from AndroZoo using the provided SHA-256 hash.
 
     Args:
         app_number (int): Number of the app from the CSV file.
         apk_path (str): Output file path.
+        conn (Connection): Pipe connection for sending data.
 
     Returns:
-        tuple:
-            - **sha256_hash** (str): SHA-256 hash of the APK.
-            - **apk_path** (str): Output file path.
+        sha256_hash (str): SHA-256 hash of the APK.
     """
+
+    global connection
+    connection = conn
 
     # Opens CSV file and returns the SHA-256 hash of the file
     sha256_hash = retrieve_hash(app_number)
 
     # Downloads the APK
     try:
-        print(f"\n\nDownloading file {app_number}...")
-        sp.check_call(f"echo {sha256_hash} | ssh -i ~/Desktop/ssh_key benoit@pierregraux.fr > {apk_path}", shell = True)
-        return sha256_hash, apk_path
+        connection.send(("current", f"Downloading file {app_number}..."))
+        sp.check_call(f"echo {sha256_hash} | ssh -i ~/Desktop/ssh_key benoit@pierregraux.fr > {apk_path}", shell = True, stdout = sp.DEVNULL, stderr = sp.DEVNULL)
+        return sha256_hash
     except sp.CalledProcessError:
-        print("ERROR: SSH command failed.")
+        connection.send(("current", "ERROR: SSH command failed."))
         sys.exit(1)

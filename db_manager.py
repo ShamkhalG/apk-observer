@@ -75,7 +75,7 @@ def insert_scan_results(cursor, connection, sha256_hash: str):
 # ////////////////////////////////////
 # /////////////// MAIN ///////////////
 # ////////////////////////////////////
-def db_main(data):
+def db_main(data, pipe_connection):
     # Generates timestamp for test
     test_time = datetime.now(timezone.utc).isoformat()
     data["test_time"] = test_time
@@ -89,7 +89,8 @@ def db_main(data):
 
     # Inserts the data for a file
     insert_row(cursor, connection, data)
-    print("\nAPK information was successfully added to the database.")
+    
+    pipe_connection.send(("current", "APK information was successfully\nadded to the database."))
 
     # Inserts scan results of the APK
     insert_scan_results(cursor, connection, data["sha256_hash"])

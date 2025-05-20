@@ -2,8 +2,6 @@ clean: # Removes generated files
 	rm ./test.apk ./scan.apk ./results.db
 
 run: # Launches all programs
-	@python3 test_apk.py & \
-	python3 virus_scan.py & \
 	python3 tui.py
 
 test: # Launches APK tester
@@ -11,9 +9,6 @@ test: # Launches APK tester
 
 scan: # Launches virus scanner program
 	python3 virus_scan.py
-
-tui:
-	python3 tui.py
 
 ssh: # Adds the SSH key to the terminal session
 	ssh-add ~/Desktop/ssh_key
