@@ -5,7 +5,7 @@ import time
 import requests
 from downloader import download_apk
 from scan_db_manager import db_main
-from config import API_KEY, API_SCAN_URL, API_REPORT_URL
+from config import API_KEY, API_SCAN_URL, API_REPORT_URL, MAX_ATTEMPT, COOLDOWN, MAX_APK_NB_VS
 
 def check_scan(sha256_hash: str):
     """
@@ -23,17 +23,15 @@ def check_scan(sha256_hash: str):
     """
 
     cur_attempt = 0
-    max_attempt = 4
 
-
-    while cur_attempt < max_attempt:
+    while cur_attempt < MAX_ATTEMPT:
         try:
             response = requests.get(API_REPORT_URL, params = {'apikey': API_KEY, 'resource': sha256_hash}, timeout = 10)
 
             # 4 requests per minute limit is reached
             if response.status_code == 204:
                 print("4 requests per minute limit hit. Waiting before retrying...")
-                time.sleep(20)
+                time.sleep(COOLDOWN)
                 cur_attempt += 1
                 continue
 
@@ -118,14 +116,9 @@ def get_label(positives: int) -> str:
 # ////////////////////////////////////
 # /////////////// MAIN ///////////////
 # ////////////////////////////////////
-positives = 0
-total = 0
-label = ""
-
-MAX_APK_NB = 10
 app_number = 1
 
-while app_number <= MAX_APK_NB: # Temporary condition    
+while app_number <= MAX_APK_NB_VS:
     # Retrieves the APK file from input
     sha256_hash, apk_path = download_apk(app_number, "scan.apk")
 

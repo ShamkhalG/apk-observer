@@ -1,0 +1,15 @@
+{
+    "test": {
+        "current": "N/A",
+        "launched": 0,
+        "crashed": 0,
+        "total": 0
+    },
+    "virus_scan": {
+        "current": "N/A",
+        "benign": 0,
+        "suspicious": 0,
+        "malicious": 0,
+        "total": 0
+    }
+}

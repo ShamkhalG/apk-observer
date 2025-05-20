@@ -5,7 +5,7 @@ from emu_manager import launch_emulator
 from downloader import download_apk
 from app_launch import app_launch_main
 from db_manager import db_main
-from config import AAPT_PATH
+from config import AAPT_PATH, MAX_APK_NB
 
 def get_sdk_info() -> dict:
     """
@@ -86,10 +86,9 @@ def get_native_libs(apk_path: str) -> list[str] | list:
 # ////////////////////////////////////
 # /////////////// MAIN ///////////////
 # ////////////////////////////////////
-MAX_APK_NB = 3
 app_number = 1
 
-while app_number <= MAX_APK_NB: # Temporary condition
+while app_number <= MAX_APK_NB:
     try:
         # Downloads the APK
         sha256_hash, apk_path = download_apk(app_number, "test.apk")

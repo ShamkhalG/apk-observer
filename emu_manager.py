@@ -61,9 +61,9 @@ def launch_emulator(sdk_info: dict):
 
     # Chooses correct emulator
     if (sdk_info["target"] is None and int(sdk_info["min"]) < 26) or (sdk_info["target"] is not None and int(sdk_info["target"]) < 26):
-        avd = "Pixel_XL"  # API 26, Android 8.0
+        avd = "Pixel_XL" # API 26, Android 8.0
     else:
-        avd = "Pixel_XL_33"  # API 33, Android 13.0
+        avd = "Pixel_XL_33" # API 33, Android 13.0
     
 
     # Checks connected emulator (if any)
