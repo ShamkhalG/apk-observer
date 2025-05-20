@@ -4,12 +4,6 @@ clean: # Removes generated files
 run: # Launches all programs
 	python3 tui.py
 
-test: # Launches APK tester
-	python3 test_apk.py
-
-scan: # Launches virus scanner program
-	python3 virus_scan.py
-
 ssh: # Adds the SSH key to the terminal session
 	ssh-add ~/Desktop/ssh_key
 
