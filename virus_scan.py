@@ -121,6 +121,14 @@ def vs_main(conn):
     global connection
     connection = conn
 
+    # Stats
+    stats = {
+        "benign": 0,
+        "suspicious": 0,
+        "malicious": 0,
+        "total": 0
+    }
+
     app_number = 1
 
     while app_number <= MAX_APK_NB_VS:
@@ -147,6 +155,12 @@ def vs_main(conn):
             positives = result.get("positives", 0)
             total = result.get("total", 0)
             label = get_label(positives)
+
+            # Updates stats
+            stats[label.lower()] += 1
+            connection.send((label.lower(), stats[label.lower()]))
+            stats["total"] += 1
+            connection.send(("total", stats["total"]))
 
             scan_data = {
                 "sha256_hash": sha256_hash,

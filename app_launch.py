@@ -108,7 +108,7 @@ def check_crash_log(package_name: str):
             line for line in logcat_output.splitlines()
             if any(keyword in line for keyword in error_keywords) and package_name in line
         ):
-            raise RuntimeError("\nError: App crashed.\n")
+            raise RuntimeError("Error: App crashed.")
 
     except sp.CalledProcessError as e:
         connection.send(("current", f"ERROR: Failed to execute 'adb logcat -t 0': {e.output}"))
@@ -130,7 +130,7 @@ def check_app_pid(package_name: str):
         result = sp.run([ADB_PATH, "shell", "pidof", package_name], stdout = sp.PIPE, stderr = sp.STDOUT, text = True, check = False)
         pid = result.stdout.strip()
         if not pid: # No PID = App not running
-            raise RuntimeError("\nError: App is not running.\n")
+            raise RuntimeError("Error: App is not running.")
         else:
             connection.send(("current", "Health check passed."))
     except sp.CalledProcessError as e:

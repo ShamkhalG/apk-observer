@@ -1,7 +1,6 @@
 import subprocess as sp
 import time
 import sys
-from typing import Optional
 from config import ADB_PATH, EMULATOR_PATH
 
 def wait_emulator_launch(timeout: int = 300):
@@ -23,7 +22,7 @@ def wait_emulator_launch(timeout: int = 300):
             if result.stdout.strip() == "1":
                 return True
         except Exception as e:
-            connection.send(("current", f"Warning: Failed to check emulator boot status: {e}"))
+            connection.send(("current", f"Warning: Failed to check\nemulator boot status: {e}"))
         time.sleep(2)
 
     return False
@@ -48,7 +47,7 @@ def wait_emulator_shutdown(device_serial: str, timeout: int = 60) -> bool:
             if device_serial not in output:
                 return True
         except Exception as e:
-            connection.send(("current", f"Warning: Failed to check emulator shut down status: {e}"))
+            connection.send(("current", f"Warning: Failed to check\nemulator shut down status: {e}"))
         time.sleep(1)
     return False
 
@@ -94,7 +93,7 @@ def launch_emulator(sdk_info: dict, conn):
             connection.send(("current", f"Emulator '{avd}' is already running."))
             return
         else: # Required emulator is different, so shutting down the current one
-            connection.send(("current", f"Different emulator '{running_avd}' is running. Shutting it down..."))
+            connection.send(("current", f"Different emulator '{running_avd}' is running.\nShutting it down..."))
             sp.run([ADB_PATH, "-s", device_serial, "emu", "kill"])
 
             # Waits for the current emulator to shut down

@@ -93,6 +93,13 @@ def ta_main(conn):
     global connection
     connection = conn
 
+    # Stats
+    stats = {
+        "apps_crashed": 0,
+        "apps_launched": 0,
+        "total": 0
+    }
+
     app_number = 1
 
     while app_number <= MAX_APK_NB:
@@ -132,10 +139,18 @@ def ta_main(conn):
             # Updates the database
             db_main(data, connection)
 
+            # Updates TUI
+            stats["apps_launched"] += 1
+            connection.send(("launched", stats["apps_launched"]))
         except RuntimeError as e:
+            if e == "Error: App crashed." or e == "Error: App is not running.":
+                stats["apps_crashed"] += 1
+                connection.send(("crashed", stats["apps_crashed"]))    
             connection.send(("current", e))
         finally:
             app_number += 1
+            stats["total"] += 1
+            connection.send(("total", stats["total"]))
 
     connection.send(("current", "Finished testing all APKs."))
     connection.close()
