@@ -1,11 +1,13 @@
 # Introduction
-This project aims to automate the process of downloading APKs using AndroZoo API, downloading, installing, and executing them on an Android emulator.
-The program also performs a health check on installed apps, scans files for malicious features on VirusTotal, and stores results in a database.
-Current status and the statistics of the program are shown in a TUI (Text-based User Interface).
+This program aims to automate the process of testing and scanning APKs. It consists of two subprograms:
+- **APK Tester**: Downloads APKs using AndroZoo API, installs, and executes them on an Android emulator. It also performs a health check on installed apps.
+- **Virus Scanner**: Scans files for malicious features on the VirusTotal website.
+
+Current status and the statistics of the program are shown in a TUI (Text-based User Interface). In addition, results are stored in a database.
 
 # Commands
 - Execution: `make run`
-- Adding SSH key: `make ssh`
+- Adding SSH key (for current terminal session): `make ssh`
 - Cleaning generated files: `make clean`
 - View the database using SQLite Browser: `make db`
 

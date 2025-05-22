@@ -73,7 +73,6 @@ def launch_emulator(sdk_info: dict, conn):
         avd = "Pixel_XL" # API 26, Android 8.0
     else:
         avd = "Pixel_XL_33" # API 33, Android 13.0
-    
 
     # Checks connected emulator (if any)
     result = sp.run([ADB_PATH, "devices"], stdout = sp.PIPE, stderr = sp.DEVNULL)
