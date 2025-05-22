@@ -115,7 +115,13 @@ def ta_main(conn):
             sdk_info = get_sdk_info()
 
             # Launches corresponding Android emulator
-            launch_emulator(sdk_info, connection)
+            sdk_version = 0
+            if sdk_info["target"] != None:
+                sdk_version = sdk_info["target"]
+            elif sdk_info["min"] != None: # If target is empty, sends min SDK version
+                sdk_version = sdk_info["min"]
+
+            launch_emulator(int(sdk_version), connection)
 
             # Installs, runs the app, and does the health check
             app_launch_main(apk_path, package_name, connection)

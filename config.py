@@ -4,9 +4,9 @@ _config = configparser.ConfigParser()
 _config.read("config.ini")
 
 # Paths
-EMULATOR_PATH = _config["paths"]["EMULATOR_PATH"]
-ADB_PATH = _config["paths"]["ADB_PATH"]
-AAPT_PATH = _config["paths"]["AAPT_PATH"]
+EMULATOR_PATH = _config["Paths"]["EMULATOR_PATH"]
+ADB_PATH = _config["Paths"]["ADB_PATH"]
+AAPT_PATH = _config["Paths"]["AAPT_PATH"]
 
 # VirusTotal API parameters
 API_KEY = _config["VirusTotal"]["API_KEY"]
@@ -20,3 +20,6 @@ MAX_APK_NB = int(_config["APK_Test"]["MAX_APK_NB"])
 MAX_APK_NB_VS = int(_config["Virus_Scan"]["MAX_APK_NB_VS"])
 MAX_ATTEMPT = int(_config["Virus_Scan"]["MAX_ATTEMPT"])
 COOLDOWN = int(_config["Virus_Scan"]["COOLDOWN"])
+
+# 
+TIMEOUT = int(_config["Downloader"]["TIMEOUT"])

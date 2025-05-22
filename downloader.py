@@ -1,6 +1,7 @@
 import subprocess as sp
 import sys
 import csv
+from config import TIMEOUT
 
 def retrieve_hash(app_number: int) -> str:
     """
@@ -47,8 +48,12 @@ def download_apk(app_number: int, apk_path: str, conn) -> str:
     # Downloads the APK
     try:
         connection.send(("current", f"Downloading file {app_number}..."))
-        sp.check_call(f"echo {sha256_hash} | ssh -i ~/Desktop/ssh_key benoit@pierregraux.fr > {apk_path}", shell = True, stdout = sp.DEVNULL, stderr = sp.DEVNULL)
+        sp.check_call(f"echo {sha256_hash} | ssh -i ~/Desktop/ssh_key benoit@pierregraux.fr > {apk_path}", shell = True, 
+                      stdout = sp.DEVNULL, stderr = sp.DEVNULL, timeout = TIMEOUT)
         return sha256_hash
+    except sp.TimeoutExpired:
+        connection.send(("current", "ERROR: SSH command timed out. Check that SSH key was added."))
+        sys.exit(1)
     except sp.CalledProcessError:
         connection.send(("current", "ERROR: SSH command failed."))
         sys.exit(1)

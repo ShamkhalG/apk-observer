@@ -3,6 +3,38 @@ import time
 import sys
 from config import ADB_PATH, EMULATOR_PATH
 
+def choose_emulator(sdk_version: int) -> str:
+    """
+    Chooses which emulator is required for the APK based on its target on minimum SDK version.
+
+    Args:
+        sdk_version (int): Target or minimum SDK version.
+    Returns:
+        adv (str): Required emulator.
+    """
+    # Chooses correct emulator
+    emulators = [
+        (0, 19, "A4"),
+        (21, 22, "A5"),
+        (23, 23, "A6"),
+        (24, 25, "A7"),
+        (26, 27, "A8"),
+        (28, 28, "A9"),
+        (29, 29, "A10"),
+        (30, 30, "A11"),
+        (31, 32, "A12"),
+        (33, 33, "A13"),
+        (34, 34, "A14"),
+        (35, 35, "A15"),
+    ]
+    
+    required_avd = "A4" # Default emulator
+    for min_sdk, target_sdk, emulator in emulators:
+        if min_sdk <= sdk_version <= target_sdk:
+            required_avd = emulator
+    
+    return required_avd
+
 def wait_emulator_launch(timeout: int = 300):
     """
     Waits for the emulator to fully boot by checking 'sys.boot_completed'.\n
@@ -56,12 +88,12 @@ def wait_emulator_shutdown(device_serial: str, timeout: int = 60) -> bool:
 # ////////////////////////////////////
 connection = None
 
-def launch_emulator(sdk_info: dict, conn):
+def launch_emulator(sdk_version: int, conn):
     """
     Launches the Android emulator according to the target or minimum SDK version for the APK.
 
     Args:
-        sdk_target (dict): SDK versions for the APK.
+        sdk_version (int): Target or minimum SDK version for the APK.
         conn (Connection): Pipe connection for sending data.
     """
 
@@ -69,10 +101,7 @@ def launch_emulator(sdk_info: dict, conn):
     connection = conn
 
     # Chooses correct emulator
-    if (sdk_info["target"] is None and int(sdk_info["min"]) < 26) or (sdk_info["target"] is not None and int(sdk_info["target"]) < 26):
-        avd = "Pixel_XL" # API 26, Android 8.0
-    else:
-        avd = "Pixel_XL_33" # API 33, Android 13.0
+    required_avd = choose_emulator(sdk_version)
 
     # Checks connected emulator (if any)
     result = sp.run([ADB_PATH, "devices"], stdout = sp.PIPE, stderr = sp.DEVNULL)
@@ -88,8 +117,8 @@ def launch_emulator(sdk_info: dict, conn):
         avd_name_result = sp.run([ADB_PATH, "-s", running_devices[0], "emu", "avd", "name"], stdout = sp.PIPE, stderr = sp.DEVNULL)
         running_avd = avd_name_result.stdout.decode().strip().splitlines()[0]
 
-        if running_avd == avd: # Required emulator is already running
-            connection.send(("current", f"Emulator '{avd}' is already running."))
+        if running_avd == required_avd: # Required emulator is already running
+            connection.send(("current", f"Emulator '{required_avd}' is already running."))
             return
         else: # Required emulator is different, so shutting down the current one
             connection.send(("current", f"Different emulator '{running_avd}' is running.\nShutting it down..."))
@@ -101,8 +130,8 @@ def launch_emulator(sdk_info: dict, conn):
                 sys.exit(1)
     
     # Starts the emulator
-    connection.send(("current", f"Starting emulator '{avd}'..."))
-    sp.Popen([EMULATOR_PATH, "-avd", avd, "-gpu", "host"], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
+    connection.send(("current", f"Starting emulator '{required_avd}'..."))
+    sp.Popen([EMULATOR_PATH, "-avd", required_avd, "-gpu", "host"], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
 
     if not wait_emulator_launch():
         connection.send(("current", "Failed to launch emulator in time. Quitting."))
