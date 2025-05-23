@@ -118,7 +118,7 @@ def shut_down_emulator():
     device_serial = running_devices[0]
 
     connection.send(("current", f"Shutting down the emulator..."))
-    sp.run([ADB_PATH, "-s", device_serial, "emu", "kill"])
+    sp.run([ADB_PATH, "-s", device_serial, "emu", "kill"], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
 
     # Waits for the current emulator to shut down
     if not wait_emulator_shutdown(device_serial):
@@ -160,7 +160,7 @@ def launch_emulator(sdk_version: int, conn):
             return
         else: # Required emulator is different, so shuts down the current one
             connection.send(("current", f"Different emulator '{running_avd}' is running.\nShutting it down..."))
-            sp.run([ADB_PATH, "-s", device_serial, "emu", "kill"])
+            sp.run([ADB_PATH, "-s", device_serial, "emu", "kill"], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
 
             # Waits for the current emulator to shut down
             if not wait_emulator_shutdown(device_serial):

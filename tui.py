@@ -3,9 +3,22 @@ from rich.table import Table
 from rich.columns import Columns
 
 import multiprocessing as mp
+import subprocess as sp
+import threading as th
+import sys
 from time import sleep
 from virus_scan import vs_main
 from test_apk import ta_main
+
+def check_ssh():
+    """
+    Checks if the SSH key is added to the agent.
+    """
+
+    result = sp.run(["ssh-add", "-l"], stdout = sp.PIPE, stderr = sp.DEVNULL)
+    if result.returncode != 0:
+        print("ERROR: SSH key is not added to the agent.")
+        sys.exit(1)
 
 def init_stats() -> tuple[dict, dict]:
     """
@@ -78,7 +91,7 @@ def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
 
     finished = [False, False] # I - APK tester, II - Virus scanner
 
-    with Live(Columns([make_test_table({}), make_scan_table({})]), refresh_per_second = 2) as live:
+    with Live("", refresh_per_second = 2) as live:
         while finished[0] == False or finished[1] == False:
             # APK Tester
             if not finished[0]:
@@ -86,7 +99,8 @@ def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
                     key, value = tui_at_conn.recv() # Retrieves updated data
                     if value == "Finished testing all APKs.":
                         finished[0] = True
-                    test_stats[key] = value # Updates stats
+
+                    test_stats[key] = value # Updates test stats
 
             # Virus Scanner
             if not finished[1]:
@@ -94,7 +108,8 @@ def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
                     key, value = tui_vs_conn.recv()
                     if value == "Finished scanning all APKs.":
                         finished[1] = True
-                    scan_stats[key] = value
+
+                    scan_stats[key] = value # Updates scan stats
 
             live.update(Columns([make_test_table(test_stats), make_scan_table(scan_stats)]))
             sleep(0.5)
@@ -104,6 +119,9 @@ def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
 # ////////////////////////////////////
 
 if __name__ == "__main__":
+    # Checks whether the SSH key is added to the agent
+    check_ssh()
+
     # Creates pipes between tui and its child processes
     tui_vs_conn, vs_conn = mp.Pipe()
     tui_at_conn, at_conn = mp.Pipe()
