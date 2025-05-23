@@ -71,25 +71,14 @@ def make_scan_table(stats):
     table.add_row("Total apks scanned:", str(stats.get("total", "N/A")))
     return table
 
-# ////////////////////////////////////
-# ///////// ENTRY POINT MAIN /////////
-# ////////////////////////////////////
+def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
+    """
+    Displays program statistics in a TUI (Text-based User Interface)
+    """
 
-if __name__ == "__main__":
-    # Creates pipes between tui and its child processes
-    tui_vs_conn, vs_conn = mp.Pipe()
-    tui_at_conn, at_conn = mp.Pipe()
-    
-    # Creates the child processes and starts them
-    vs = mp.Process(target = vs_main, args = (vs_conn,))
-    ta = mp.Process(target = ta_main, args = (at_conn,))
-    vs.start()
-    ta.start()
-
-    test_stats, scan_stats = init_stats()
     finished = [False, False] # I - APK tester, II - Virus scanner
 
-    with Live(Columns([make_test_table({}), make_scan_table({})]), refresh_per_second = 4) as live:
+    with Live(Columns([make_test_table({}), make_scan_table({})]), refresh_per_second = 2) as live:
         while finished[0] == False or finished[1] == False:
             # APK Tester
             if not finished[0]:
@@ -109,3 +98,23 @@ if __name__ == "__main__":
 
             live.update(Columns([make_test_table(test_stats), make_scan_table(scan_stats)]))
             sleep(0.5)
+
+# ////////////////////////////////////
+# ///////// ENTRY POINT MAIN /////////
+# ////////////////////////////////////
+
+if __name__ == "__main__":
+    # Creates pipes between tui and its child processes
+    tui_vs_conn, vs_conn = mp.Pipe()
+    tui_at_conn, at_conn = mp.Pipe()
+    
+    # Creates the child processes and starts them
+    vs = mp.Process(target = vs_main, args = (vs_conn,))
+    ta = mp.Process(target = ta_main, args = (at_conn,))
+    vs.start()
+    ta.start()
+
+    test_stats, scan_stats = init_stats()
+
+    # TUI 
+    tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats)

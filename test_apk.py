@@ -1,7 +1,7 @@
 import subprocess as sp
 import zipfile as zp
 
-from emu_manager import launch_emulator
+from emu_manager import launch_emulator, shut_down_emulator
 from downloader import download_apk
 from app_launch import app_launch_main
 from db_manager import db_main
@@ -157,6 +157,8 @@ def ta_main(conn):
             app_number += 1
             stats["total"] += 1
             connection.send(("total", stats["total"]))
+
+    shut_down_emulator()
 
     connection.send(("current", "Finished testing all APKs."))
     connection.close()
