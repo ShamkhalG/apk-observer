@@ -94,6 +94,21 @@ def get_devices() -> list[str]:
 
     return running_devices
 
+def start_emulator(avd: str):
+    """
+    Launches the correct emulator.
+
+    Args:
+        avd (str): Correct device to launch.
+    """
+
+    connection.send(("current", f"Starting emulator '{avd}'..."))
+    sp.Popen([EMULATOR_PATH, "-avd", avd, "-gpu", "host", "-no-window"], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
+
+    if not wait_emulator_launch():
+        connection.send(("current", "Failed to launch emulator in time. Quitting."))
+        sys.exit(1)
+
 def shut_down_emulator():
     """
     Shuts down the running emulator.
@@ -153,9 +168,4 @@ def launch_emulator(sdk_version: int, conn):
                 sys.exit(1)
     
     # Starts the emulator
-    connection.send(("current", f"Starting emulator '{required_avd}'..."))
-    sp.Popen([EMULATOR_PATH, "-avd", required_avd, "-gpu", "host"], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
-
-    if not wait_emulator_launch():
-        connection.send(("current", "Failed to launch emulator in time. Quitting."))
-        sys.exit(1)
+    start_emulator(required_avd)
