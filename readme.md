@@ -17,7 +17,7 @@ There are 10 python files:
 
 - **tui.py:** Entry point of the program. It launches **APK Tester** and **Virus Scanner** and shows their current status as well as their statistics in a TUI (Text-based User Interface).
 
-- **user_input.py:** Monitors user input in a separate terminal. If the user writes "quit", then it signals all processes to shut down.
+- **user_input.py:** Monitors user input in a separate terminal. If the user writes "quit", it writes the command in a file. As all files constantly check the file for commands, they will shutdown if they detect the "quit" command.
 
 - **test_apk.py:** Downloads an APK file using `downloader.py`, launches emulator with `emu_manager.py`, runs and verifies the app on the emulator with `app_launch.py`, and updates the database with `db_manager.py` for every downloaded APK.
 - **downloader.py**: Downloads APK files from Androzoo using the SHA-256 hash from `latest.csv`.
