@@ -12,11 +12,12 @@ Current status and the statistics of the program are shown in a TUI (Text-based 
 - View the database using SQLite Browser: `make db`
 
 # Files
-There are 9 python files.
-
+There are 10 python files:
 - **config.py**: Extracts global variables and configuration variables from `config.ini`.
 
 - **tui.py:** Entry point of the program. It launches **APK Tester** and **Virus Scanner** and shows their current status as well as their statistics in a TUI (Text-based User Interface).
+
+- **user_input.py:** Monitors user input in a separate terminal. If the user writes "quit", then it signals all processes to shut down.
 
 - **test_apk.py:** Downloads an APK file using `downloader.py`, launches emulator with `emu_manager.py`, runs and verifies the app on the emulator with `app_launch.py`, and updates the database with `db_manager.py` for every downloaded APK.
 - **downloader.py**: Downloads APK files from Androzoo using the SHA-256 hash from `latest.csv`.

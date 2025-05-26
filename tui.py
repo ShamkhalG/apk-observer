@@ -4,11 +4,12 @@ from rich.columns import Columns
 
 import multiprocessing as mp
 import subprocess as sp
-import threading as th
+import os
 import sys
 from time import sleep
 from virus_scan import vs_main
 from test_apk import ta_main
+from config import COMMANDS_FILE
 
 def check_ssh():
     """
@@ -97,7 +98,7 @@ def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
             if not finished[0]:
                 if tui_at_conn.poll(0.5): # Checks for sent data
                     key, value = tui_at_conn.recv() # Retrieves updated data
-                    if value == "Finished testing all APKs.":
+                    if value == "Finished testing all APKs." or value == "Exited early due to user request.":
                         finished[0] = True
 
                     test_stats[key] = value # Updates test stats
@@ -106,7 +107,7 @@ def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
             if not finished[1]:
                 if tui_vs_conn.poll(0.5):
                     key, value = tui_vs_conn.recv()
-                    if value == "Finished scanning all APKs.":
+                    if value == "Finished scanning all APKs." or value == "Exited early due to user request.":
                         finished[1] = True
 
                     scan_stats[key] = value # Updates scan stats
@@ -119,6 +120,9 @@ def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
 # ////////////////////////////////////
 
 if __name__ == "__main__":
+    # Launches user_input to allow the user to enter commands (like "quit")
+    sp.Popen(["gnome-terminal", "--geometry=80x20", "--", "python3", "user_input.py"])
+
     # Checks whether the SSH key is added to the agent
     check_ssh()
 
@@ -136,3 +140,7 @@ if __name__ == "__main__":
 
     # TUI 
     tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats)
+
+    # Removes the temporary file for user commands
+    if os.path.exists(COMMANDS_FILE):
+        os.remove(COMMANDS_FILE)

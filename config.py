@@ -21,5 +21,8 @@ MAX_APK_NB_VS = int(_config["Virus_Scan"]["MAX_APK_NB_VS"])
 MAX_ATTEMPT = int(_config["Virus_Scan"]["MAX_ATTEMPT"])
 COOLDOWN = int(_config["Virus_Scan"]["COOLDOWN"])
 
-# 
+# Timeout for file downloader
 TIMEOUT = int(_config["Downloader"]["TIMEOUT"])
+
+# Name of the temporary file that contains user commands
+COMMANDS_FILE = _config["Command"]["COMMANDS_FILE"]

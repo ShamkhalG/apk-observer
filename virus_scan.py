@@ -5,7 +5,7 @@ import time
 import requests
 from downloader import download_apk
 from scan_db_manager import db_main
-from config import API_KEY, API_SCAN_URL, API_REPORT_URL, MAX_ATTEMPT, COOLDOWN, MAX_APK_NB_VS
+from config import API_KEY, API_SCAN_URL, API_REPORT_URL, MAX_ATTEMPT, COOLDOWN, MAX_APK_NB_VS, COMMANDS_FILE
 
 def check_scan(sha256_hash: str):
     """
@@ -110,6 +110,20 @@ def get_label(positives: int) -> str:
     else:
         return "MALICIOUS"
 
+def quit_requested() -> bool:
+    """
+    Checks if the file contains "quit" command from the user.
+
+    Returns:
+        Bool:
+            - **True:** If the file contains "quit" command.
+            - **False:** If the file contains something else or doesn't exist.
+    """
+    try:
+        with open(COMMANDS_FILE, "r") as f:
+            return f.read().strip().lower() == "quit"
+    except FileNotFoundError:
+        return False
 
 # ////////////////////////////////////
 # /////////////// MAIN ///////////////
@@ -133,6 +147,11 @@ def vs_main(conn):
 
     while app_number <= MAX_APK_NB_VS:
         try:
+            # Checks if the user requested manual shutdown
+            if quit_requested():
+                connection.send(("current", "Exited early due to user request."))
+                break
+
             # Retrieves the APK file from input
             apk_path = "scan.apk"
             sha256_hash = download_apk(app_number, apk_path, connection)

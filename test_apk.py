@@ -5,7 +5,7 @@ from emu_manager import launch_emulator, shut_down_emulator
 from downloader import download_apk
 from app_launch import app_launch_main
 from db_manager import db_main
-from config import AAPT_PATH, MAX_APK_NB
+from config import AAPT_PATH, MAX_APK_NB, COMMANDS_FILE
 
 def get_sdk_info() -> dict:
     """
@@ -82,6 +82,20 @@ def get_native_libs(apk_path: str) -> list[str] | list:
 
     return ["ERROR"]
 
+def quit_requested() -> bool:
+    """
+    Checks if the file contains "quit" command from the user.
+
+    Returns:
+        Bool:
+            - **True:** If the file contains "quit" command.
+            - **False:** If the file contains something else or doesn't exist.
+    """
+    try:
+        with open(COMMANDS_FILE, "r") as f:
+            return f.read().strip().lower() == "quit"
+    except FileNotFoundError:
+        return False
 
 # ////////////////////////////////////
 # /////////////// MAIN ///////////////
@@ -104,6 +118,11 @@ def ta_main(conn):
 
     while app_number <= MAX_APK_NB:
         try:
+            # Checks if the user requested manual shutdown
+            if quit_requested():
+                connection.send(("current", "Exited early due to user request."))
+                break
+
             # Downloads the APK
             apk_path = "test.apk"
             sha256_hash = download_apk(app_number, apk_path, connection)
