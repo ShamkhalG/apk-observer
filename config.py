@@ -13,6 +13,10 @@ API_KEY = _config["VirusTotal"]["API_KEY"]
 API_SCAN_URL = _config["VirusTotal"]["API_SCAN_URL"]
 API_REPORT_URL = _config["VirusTotal"]["API_REPORT_URL"]
 
+# Files
+COMMANDS_FILE = _config["Files"]["COMMANDS_FILE"]
+STATS_FILE = _config["Files"]["STATS_FILE"]
+
 # APK Test parameters
 MAX_APK_NB = int(_config["APK_Test"]["MAX_APK_NB"])
 
@@ -23,6 +27,3 @@ COOLDOWN = int(_config["Virus_Scan"]["COOLDOWN"])
 
 # Timeout for file downloader
 TIMEOUT = int(_config["Downloader"]["TIMEOUT"])
-
-# Name of the temporary file that contains user commands
-COMMANDS_FILE = _config["Command"]["COMMANDS_FILE"]

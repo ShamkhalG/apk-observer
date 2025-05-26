@@ -9,7 +9,7 @@ import sys
 from time import sleep
 from virus_scan import vs_main
 from test_apk import ta_main
-from config import COMMANDS_FILE
+from config import COMMANDS_FILE, STATS_FILE
 
 def check_ssh():
     """
@@ -98,7 +98,7 @@ def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
             if not finished[0]:
                 if tui_at_conn.poll(0.5): # Checks for sent data
                     key, value = tui_at_conn.recv() # Retrieves updated data
-                    if value == "Finished testing all APKs." or value == "Exited early due to user request.":
+                    if value == "Finished testing all APKs." or key == "counter":
                         finished[0] = True
 
                     test_stats[key] = value # Updates test stats
@@ -107,13 +107,18 @@ def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
             if not finished[1]:
                 if tui_vs_conn.poll(0.5):
                     key, value = tui_vs_conn.recv()
-                    if value == "Finished scanning all APKs." or value == "Exited early due to user request.":
+                    if value == "Finished scanning all APKs." or key == "counter":
                         finished[1] = True
 
                     scan_stats[key] = value # Updates scan stats
 
             live.update(Columns([make_test_table(test_stats), make_scan_table(scan_stats)]))
             sleep(0.5)
+    
+    if "counter" in test_stats and "counter" in scan_stats: # If counters were added to stats
+        with open(STATS_FILE, "w") as f:
+            f.write(f"APK_TESTER: {test_stats}\n" + 
+            f"VIRUS_SCANNER: {scan_stats}")
 
 # ////////////////////////////////////
 # ///////// ENTRY POINT MAIN /////////

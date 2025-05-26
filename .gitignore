@@ -2,6 +2,7 @@ config.ini
 instructions.md
 latest.csv
 commands.txt
+stats.txt
 
 scan.apk
 test.apk

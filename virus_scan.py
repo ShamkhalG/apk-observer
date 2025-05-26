@@ -137,24 +137,24 @@ def vs_main(conn):
 
     # Stats
     stats = {
+        "app_number": 1,
         "benign": 0,
         "suspicious": 0,
         "malicious": 0,
         "total": 0
     }
 
-    app_number = 1
-
-    while app_number <= MAX_APK_NB_VS:
+    while stats["app_number"] <= MAX_APK_NB_VS:
         try:
             # Checks if the user requested manual shutdown
             if quit_requested():
                 connection.send(("current", "Exited early due to user request."))
+                connection.send(("counter", stats["app_number"])) # Sends the stats["app_number"] to save it
                 break
 
             # Retrieves the APK file from input
             apk_path = "scan.apk"
-            sha256_hash = download_apk(app_number, apk_path, connection)
+            sha256_hash = download_apk(stats["app_number"], apk_path, connection)
 
             # Checks if the file is already scanned in VirusTotal
             result = check_scan(sha256_hash)
@@ -193,7 +193,7 @@ def vs_main(conn):
         except RuntimeError as e:
             connection.send(("current", e))
         finally:
-            app_number += 1
+            stats["app_number"] += 1
     
     connection.send(("current", "Finished scanning all APKs."))
     connection.close()

@@ -109,23 +109,23 @@ def ta_main(conn):
 
     # Stats
     stats = {
+        "app_number": 1,
         "apps_crashed": 0,
         "apps_launched": 0,
         "total": 0
     }
 
-    app_number = 1
-
-    while app_number <= MAX_APK_NB:
+    while stats["app_number"] <= MAX_APK_NB:
         try:
             # Checks if the user requested manual shutdown
             if quit_requested():
                 connection.send(("current", "Exited early due to user request."))
+                connection.send(("counter", stats["app_number"])) # Sends the "app_number" to save it in a 
                 break
 
             # Downloads the APK
             apk_path = "test.apk"
-            sha256_hash = download_apk(app_number, apk_path, connection)
+            sha256_hash = download_apk(stats["app_number"], apk_path, connection)
             
             # Retrieves package name
             package_name = get_package_name(apk_path)
@@ -173,7 +173,7 @@ def ta_main(conn):
                 connection.send(("crashed", stats["apps_crashed"]))    
             connection.send(("current", e))
         finally:
-            app_number += 1
+            stats["app_number"] += 1
             stats["total"] += 1
             connection.send(("total", stats["total"]))
 
