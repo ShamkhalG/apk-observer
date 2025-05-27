@@ -5,7 +5,7 @@ run: # Launches all programs
 	python3 tui.py
 
 ssh: # Adds the SSH key to the terminal session
-	ssh-add ./ssh_key
+	ssh-add ~/.ssh/ssh_key
 
 db: # Looks at the database
 	sqlitebrowser results.db

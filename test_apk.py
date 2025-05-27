@@ -1,5 +1,6 @@
 import subprocess as sp
 import zipfile as zp
+import sys
 
 from emu_manager import launch_emulator, shut_down_emulator
 from downloader import download_apk
@@ -96,8 +97,8 @@ def ta_main(stats, conn, quit_flag: bool):
         try:
             # Checks if the quit flag is triggered
             if quit_flag.value == True:
-                connection.send(("current", "Exited early due to user request."))
                 connection.send(("counter", stats["counter"])) # Sends the "counter" to save it in a 
+                connection.send(("current", "Exited early due to user request."))
                 break
 
             # Downloads the APK
@@ -158,5 +159,6 @@ def ta_main(stats, conn, quit_flag: bool):
             stats["total"] += 1
             connection.send(("total", stats["total"]))
 
+    connection.send(("counter", stats["counter"]))
     connection.send(("current", "Finished testing all APKs."))
     connection.close()

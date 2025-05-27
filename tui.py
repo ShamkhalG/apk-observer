@@ -126,7 +126,7 @@ def tui(tui_at_conn, tui_vs_conn, test_stats: dict, scan_stats: dict):
     finished = [False, False] # I - APK tester, II - Virus scanner
     status_message = Text("Press 'q' on keyboard to quit early.", style = "bold cyan")
 
-    with Live("", refresh_per_second = 2) as live:
+    with Live("", refresh_per_second = 10) as live:
         while finished[0] == False or finished[1] == False:
             # 'q' key is pressed
             if user_triggered.is_set():
@@ -137,7 +137,7 @@ def tui(tui_at_conn, tui_vs_conn, test_stats: dict, scan_stats: dict):
             if not finished[0]:
                 if tui_at_conn.poll(0.5): # Checks for sent data
                     key, value = tui_at_conn.recv() # Retrieves updated data
-                    if value == "Finished testing all APKs." or key == "counter":
+                    if value == "Finished testing all APKs." or value == "Exited early due to user request.":
                         finished[0] = True
 
                     test_stats[key] = value # Updates test stats
@@ -146,7 +146,7 @@ def tui(tui_at_conn, tui_vs_conn, test_stats: dict, scan_stats: dict):
             if not finished[1]:
                 if tui_vs_conn.poll(0.5):
                     key, value = tui_vs_conn.recv()
-                    if value == "Finished scanning all APKs." or key == "counter":
+                    if value == "Finished scanning all APKs." or value == "Exited early due to user request.":
                         finished[1] = True
 
                     scan_stats[key] = value # Updates scan stats

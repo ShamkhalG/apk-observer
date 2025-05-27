@@ -125,8 +125,8 @@ def vs_main(stats, conn, quit_flag: bool):
         try:
             # Checks if the quit flag is triggered
             if quit_flag.value == True:
-                connection.send(("current", "Exited early due to user request."))
                 connection.send(("counter", stats["counter"])) # Sends the stats["counter"] to save it
+                connection.send(("current", "Exited early due to user request."))
                 break
 
             # Retrieves the APK file from input
@@ -172,5 +172,6 @@ def vs_main(stats, conn, quit_flag: bool):
         finally:
             stats["counter"] += 1
     
+    connection.send(("counter", stats["counter"]))
     connection.send(("current", "Finished scanning all APKs."))
     connection.close()

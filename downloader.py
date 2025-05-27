@@ -48,10 +48,10 @@ def download_apk(app_number: int, apk_path: str, conn) -> str:
     # Downloads the APK
     try:
         connection.send(("current", f"Downloading file {app_number}..."))
-        sp.check_call(f"echo {sha256_hash} | ssh -i ~/Desktop/ssh_key benoit@pierregraux.fr > {apk_path}", shell = True, 
+        sp.check_call(f"echo {sha256_hash} | ssh -i ~/.ssh/ssh_key benoit@pierregraux.fr > {apk_path}", shell = True, 
                       stdout = sp.DEVNULL, stderr = sp.DEVNULL, timeout = TIMEOUT)
         return sha256_hash
-    except sp.TimeoutExpired:
+    except sp.TimeoutExpired:   
         connection.send(("current", "ERROR: SSH command timed out. Check that SSH key was added."))
         sys.exit(1)
     except sp.CalledProcessError:

@@ -8,11 +8,11 @@ Current status and the statistics of the program are shown in a TUI (Text-based 
 # Prerequisites
 1. Android Studio must be installed on the computer.
 2. 12 Android Virtual Devices must be installed with the following Android versions: *4.4, 5.1, 6.0, 7.1.1, 8.1, 9.0, 10.0, 11.0, 12L, 13.0, 14.0, 15.0*
-3. SSH key must be created for the connection to the server to use Androzoo API.
+3. SSH key must be created under the name **ssh_key** and stored in **.ssh** directory. It's used to connect to the server to use Androzoo API.
 4. SQLite Browser must be installed on the computer (optional, to view the database).
 
 ### Execution
-1. Add the SSH key to the agent using `make ssh`. It reads the file **./ssh_key** located at this directory.
+1. Add the SSH key to the agent using `make ssh`. It reads the file **./ssh_key** located at the **.ssh** directory.
 2. Launch the script using `make run`. TUI will display the statistics of each program.
 
 # Commands

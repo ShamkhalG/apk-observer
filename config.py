@@ -1,17 +1,21 @@
+from dotenv import load_dotenv
 import configparser
+import os
+
+load_dotenv()
 
 _config = configparser.ConfigParser()
 _config.read("config.ini")
 
 # Paths
-EMULATOR_PATH = _config["Paths"]["EMULATOR_PATH"]
-ADB_PATH = _config["Paths"]["ADB_PATH"]
-AAPT_PATH = _config["Paths"]["AAPT_PATH"]
+EMULATOR_PATH = os.path.expanduser(_config["Paths"]["EMULATOR_PATH"])
+ADB_PATH = os.path.expanduser(_config["Paths"]["ADB_PATH"])
+AAPT_PATH = os.path.expanduser(_config["Paths"]["AAPT_PATH"])
 
 # VirusTotal API parameters
-API_KEY = _config["VirusTotal"]["API_KEY"]
-API_SCAN_URL = _config["VirusTotal"]["API_SCAN_URL"]
-API_REPORT_URL = _config["VirusTotal"]["API_REPORT_URL"]
+API_KEY = os.getenv("API_KEY")
+API_SCAN_URL = os.getenv("API_SCAN_URL")
+API_REPORT_URL = API_SCAN_URL = os.getenv("API_REPORT_URL")
 
 # Files
 STATS_FILE = _config["Files"]["STATS_FILE"]
