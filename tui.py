@@ -9,12 +9,13 @@ import subprocess as sp
 import threading as th
 import os
 import sys
+import ast
 import select
 import tty, termios
 from time import sleep
 from virus_scan import vs_main
 from test_apk import ta_main
-from config import STATS_FILE
+from config import ERRORS_FILE, STATS_FILE
 
 def key_listener():
     """
@@ -38,7 +39,8 @@ def check_ssh():
 
 def init_stats() -> tuple[dict, dict]:
     """
-    Initializes stats to default zeroed values.
+    Reads stats from **stats.txt** file. 
+    If it doesn't exist, then initializes stats to default zeroed values.
 
     Returns:
         tuple:
@@ -46,20 +48,28 @@ def init_stats() -> tuple[dict, dict]:
             - **scan_stats** (dict): Stats for Virus Scan.
     """
 
-    test_stats = {        
-        "current": "N/A",
-        "launched": 0,
-        "crashed": 0,
-        "total": 0
-    }
-    
-    scan_stats = {
-        "current": "N/A",
-        "benign": 0,
-        "suspicious": 0,
-        "malicious": 0,
-        "total": 0
-    }
+    test_stats = {}
+    scan_stats = {}
+
+    if os.path.exists(STATS_FILE): # If the program has been launched before
+        with open(STATS_FILE) as f:
+            test_stats = ast.literal_eval(f.readline())
+            scan_stats = ast.literal_eval(f.readline())
+    else: # First launch
+        test_stats = {        
+            "current": "N/A",
+            "launched": 0,
+            "crashed": 0,
+            "total": 0
+        }
+        
+        scan_stats = {
+            "current": "N/A",
+            "benign": 0,
+            "suspicious": 0,
+            "malicious": 0,
+            "total": 0
+        }
 
     return (test_stats, scan_stats)
 
@@ -152,14 +162,17 @@ def tui(tui_at_conn, tui_vs_conn, test_stats: dict, scan_stats: dict):
     # Saves stats in a .txt file
     if quit_flag.value == True:
         with open(STATS_FILE, "w") as f:
-            f.write(f"APK_TESTER: {test_stats}\n" + 
-            f"VIRUS_SCANNER: {scan_stats}")
+            f.write(f"{test_stats}\n" + 
+            f"{scan_stats}")
 
 # ////////////////////////////////////
 # ///////// ENTRY POINT MAIN /////////
 # ////////////////////////////////////
 
 if __name__ == "__main__":
+    # Writes down all errors to 
+    sys.stderr = open(ERRORS_FILE, "w")
+    
     # Checks whether the SSH key is added to the agent
     check_ssh()
 
@@ -176,14 +189,14 @@ if __name__ == "__main__":
     tui_at_conn, at_conn = mp.Pipe()
     quit_flag = mp.Value('b', False)
     
-    # Creates the child processes and starts them
-    vs = mp.Process(target = vs_main, args = (vs_conn, quit_flag))
-    ta = mp.Process(target = ta_main, args = (at_conn, quit_flag))
-    vs.start()
-    ta.start()
-
     # Initializes stats
     test_stats, scan_stats = init_stats()
+
+    # Creates the child processes and starts them
+    ta = mp.Process(target = ta_main, args = (test_stats, at_conn, quit_flag))
+    vs = mp.Process(target = vs_main, args = (scan_stats, vs_conn, quit_flag))
+    ta.start()
+    vs.start()
 
     # TUI 
     tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats)

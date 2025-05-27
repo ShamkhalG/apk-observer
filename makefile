@@ -1,5 +1,5 @@
 clean: # Removes generated files
-	rm ./test.apk ./scan.apk ./results.db ./stats.txt
+	rm ./test.apk ./scan.apk ./results.db ./stats.txt ./errors.txt
 
 run: # Launches all programs
 	python3 tui.py

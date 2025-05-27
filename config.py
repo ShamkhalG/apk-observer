@@ -15,6 +15,7 @@ API_REPORT_URL = _config["VirusTotal"]["API_REPORT_URL"]
 
 # Files
 STATS_FILE = _config["Files"]["STATS_FILE"]
+ERRORS_FILE = _config["Files"]["ERRORS_FILE"]
 
 # APK Test parameters
 MAX_APK_NB = int(_config["APK_Test"]["MAX_APK_NB"])

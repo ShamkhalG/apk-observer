@@ -87,30 +87,22 @@ def get_native_libs(apk_path: str) -> list[str] | list:
 # ////////////////////////////////////
 connection = None
 
-def ta_main(conn, quit_flag: bool):
+def ta_main(stats, conn, quit_flag: bool):
     # Making the connection global to all functions
     global connection
     connection = conn
 
-    # Stats
-    stats = {
-        "app_number": 1,
-        "apps_crashed": 0,
-        "apps_launched": 0,
-        "total": 0
-    }
-
-    while stats["app_number"] <= MAX_APK_NB:
+    while stats["counter"] <= MAX_APK_NB:
         try:
             # Checks if the quit flag is triggered
             if quit_flag.value == True:
                 connection.send(("current", "Exited early due to user request."))
-                connection.send(("counter", stats["app_number"])) # Sends the "app_number" to save it in a 
+                connection.send(("counter", stats["counter"])) # Sends the "counter" to save it in a 
                 break
 
             # Downloads the APK
             apk_path = "test.apk"
-            sha256_hash = download_apk(stats["app_number"], apk_path, connection)
+            sha256_hash = download_apk(stats["counter"], apk_path, connection)
             
             # Retrieves package name
             package_name = get_package_name(apk_path)
@@ -150,15 +142,15 @@ def ta_main(conn, quit_flag: bool):
             db_main(data, connection)
 
             # Updates TUI
-            stats["apps_launched"] += 1
-            connection.send(("launched", stats["apps_launched"]))
+            stats["launched"] += 1
+            connection.send(("launched", stats["launched"]))
         except RuntimeError as e:
             if e == "Error: App crashed." or e == "Error: App is not running.":
-                stats["apps_crashed"] += 1
-                connection.send(("crashed", stats["apps_crashed"]))    
+                stats["crashed"] += 1
+                connection.send(("crashed", stats["crashed"]))    
             connection.send(("current", e))
         finally:
-            stats["app_number"] += 1
+            stats["counter"] += 1
             stats["total"] += 1
             connection.send(("total", stats["total"]))
 
