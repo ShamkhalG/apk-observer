@@ -58,9 +58,9 @@ def make_test_table(stats):
     
     table = Table(title = "APK tester")
     table.add_column("Metric")
-    table.add_column("Value")
+    table.add_column("Value", width = 35)
 
-    table.add_row("Current status:", str(stats.get("current", "N/A")))
+    table.add_row("Current status:\n\n", str(stats.get("current", "N/A")))
     table.add_row("Apps launched:", str(stats.get("launched", "N/A")))
     table.add_row("Apps crashed:", str(stats.get("crashed", "N/A")))
     table.add_row("Total apks tested:", str(stats.get("total", "N/A")))
@@ -76,12 +76,12 @@ def make_scan_table(stats):
 
     table = Table(title = "Virus scanner")
     table.add_column("Metric")
-    table.add_column("Value")
+    table.add_column("Value", width = 35)
 
-    table.add_row("Current status:", str(stats.get("current", "N/A")))
-    table.add_row("Benign:", str(stats.get("benign", "N/A")))
-    table.add_row("Suspicious:", str(stats.get("suspicious", "N/A")))
-    table.add_row("Malicious:", str(stats.get("malicious", "N/A")))
+    table.add_row("Current status:\n", str(stats.get("current", "N/A")))
+    table.add_row("Benign (0 flags):", str(stats.get("benign", "N/A")))
+    table.add_row("Suspicious (1 - 2 flags):", str(stats.get("suspicious", "N/A")))
+    table.add_row("Malicious (2+ flags):", str(stats.get("malicious", "N/A")))
     table.add_row("Total apks scanned:", str(stats.get("total", "N/A")))
     return table
 

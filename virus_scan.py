@@ -22,8 +22,8 @@ def check_scan(sha256_hash: str):
         response (JSON object): Response in Pickle format.
     """
 
+    connection.send(("current", "Checking if the file has\nalready been scanned before..."))
     cur_attempt = 0
-
     while cur_attempt < MAX_ATTEMPT:
         try:
             response = requests.get(API_REPORT_URL, params = {'apikey': API_KEY, 'resource': sha256_hash}, timeout = 10)
@@ -40,6 +40,7 @@ def check_scan(sha256_hash: str):
                 connection.send(("current", f"HTTP error {response.status_code}: {response.text}"))
                 sys.exit(1)
 
+            connection.send(("current", "File has been already scanned.\nWriting down results..."))
             return response.json()
         except requests.RequestException as e:
             connection.send(("current", f"ERROR: Request to Virus Total failed: {e}"))
