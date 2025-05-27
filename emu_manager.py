@@ -35,7 +35,18 @@ def choose_emulator(sdk_version: int) -> str:
     
     return required_avd
 
-def wait_emulator_launch(timeout: int = 300):
+def get_devices() -> list[str]:
+    """
+    Obtains the list of running emulators.
+    """
+
+    result = sp.run([ADB_PATH, "devices"], stdout = sp.PIPE, stderr = sp.DEVNULL)
+    output = result.stdout.decode().strip().splitlines()
+    running_devices = [line.split()[0] for line in output[1:] if "emulator" in line] # Skips the first line: "List of devices attached"
+
+    return running_devices
+
+def wait_emulator_start(timeout: int = 300) -> bool:
     """
     Waits for the emulator to fully boot by checking 'sys.boot_completed'.\n
     If the emulator doesn't launch in 5 minutes, the program terminates. 
@@ -58,6 +69,24 @@ def wait_emulator_launch(timeout: int = 300):
         time.sleep(2)
 
     return False
+
+def start_emulator(avd: str):
+    """
+    Launches the correct emulator.
+
+    Args:
+        avd (str): Device to be launch.
+    """
+
+    connection.send(("current", f"Starting emulator '{avd}'..."))
+    sp.Popen([EMULATOR_PATH, "-avd", avd, 
+              "-wipe-data", "-no-snapshot-load", "-no-boot-anim", 
+              "-netdelay", "none", 
+              "-netspeed", "full", "-gpu", "host", "-no-window"], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
+
+    if not wait_emulator_start():
+        connection.send(("current", "Failed to launch emulator in time. Quitting."))
+        sys.exit(1)
 
 def wait_emulator_shutdown(device_serial: str, timeout: int = 60) -> bool:
     """
@@ -82,32 +111,6 @@ def wait_emulator_shutdown(device_serial: str, timeout: int = 60) -> bool:
             connection.send(("current", f"Warning: Failed to check\nemulator shut down status: {e}"))
         time.sleep(1)
     return False
-
-def get_devices() -> list[str]:
-    """
-    Obtains the list of running emulators.
-    """
-
-    result = sp.run([ADB_PATH, "devices"], stdout = sp.PIPE, stderr = sp.DEVNULL)
-    output = result.stdout.decode().strip().splitlines()
-    running_devices = [line.split()[0] for line in output[1:] if "emulator" in line] # Skips the first line: "List of devices attached"
-
-    return running_devices
-
-def start_emulator(avd: str):
-    """
-    Launches the correct emulator.
-
-    Args:
-        avd (str): Correct device to launch.
-    """
-
-    connection.send(("current", f"Starting emulator '{avd}'..."))
-    sp.Popen([EMULATOR_PATH, "-avd", avd, "-gpu", "host", "-no-window"], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
-
-    if not wait_emulator_launch():
-        connection.send(("current", "Failed to launch emulator in time. Quitting."))
-        sys.exit(1)
 
 def shut_down_emulator():
     """
@@ -144,28 +147,6 @@ def launch_emulator(sdk_version: int, conn):
 
     # Chooses right emulator for the APK
     required_avd = choose_emulator(sdk_version)
-
-    # Checks the connected emulator (if any)
-    running_devices = get_devices()
-
-    if running_devices:
-        device_serial = running_devices[0]
-
-        # Checks running emulator's AVD name
-        avd_name_result = sp.run([ADB_PATH, "-s", running_devices[0], "emu", "avd", "name"], stdout = sp.PIPE, stderr = sp.DEVNULL)
-        running_avd = avd_name_result.stdout.decode().strip().splitlines()[0]
-
-        if running_avd == required_avd: # Required emulator is already running
-            connection.send(("current", f"Emulator '{required_avd}' is already running."))
-            return
-        else: # Required emulator is different, so shuts down the current one
-            connection.send(("current", f"Different emulator '{running_avd}' is running.\nShutting it down..."))
-            sp.run([ADB_PATH, "-s", device_serial, "emu", "kill"], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
-
-            # Waits for the current emulator to shut down
-            if not wait_emulator_shutdown(device_serial):
-                connection.send(("current", "Timeout: Emulator did not shut down cleanly. Quitting."))
-                sys.exit(1)
     
     # Starts the emulator
     start_emulator(required_avd)

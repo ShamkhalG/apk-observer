@@ -7,6 +7,25 @@ from app_launch import app_launch_main
 from db_manager import db_main
 from config import AAPT_PATH, MAX_APK_NB
 
+def get_package_name(apk_path: str) -> str:
+    """
+    Retrieves the package name of the APK.
+
+    Returns:
+        package_name (str): Package name of the APK.
+    """
+
+    try:
+        result = sp.run([AAPT_PATH, "dump", "badging", apk_path], stdout = sp.PIPE, stderr = sp.DEVNULL, check = True, text = True)
+        for line in result.stdout.splitlines():
+            if line.startswith("package:"):
+                parts = line.split("'")
+                return parts[1] # The package name
+    except FileNotFoundError:
+        raise RuntimeError("ERROR: APK file not found or invalid path.")
+    except sp.CalledProcessError:
+        raise RuntimeError("ERROR: Failed to extract package name with AAPT.")
+
 def get_sdk_info() -> dict:
     """
     Retrieves and returns minimum, target, and maximum SDK versions of an apk.
@@ -36,25 +55,6 @@ def get_sdk_info() -> dict:
         return sdk_info
     except sp.CalledProcessError:
         connection.send(("current", f"ERROR: Failed to retrieve SDK versions."))
-
-def get_package_name(apk_path: str) -> str:
-    """
-    Retrieves the package name of the APK.
-
-    Returns:
-        package_name (str): Package name of the APK.
-    """
-
-    try:
-        result = sp.run([AAPT_PATH, "dump", "badging", apk_path], stdout = sp.PIPE, stderr = sp.DEVNULL, check = True, text = True)
-        for line in result.stdout.splitlines():
-            if line.startswith("package:"):
-                parts = line.split("'")
-                return parts[1] # The package name
-    except FileNotFoundError:
-        raise RuntimeError("ERROR: APK file not found or invalid path.")
-    except sp.CalledProcessError:
-        raise RuntimeError("ERROR: Failed to extract package name with AAPT.")
 
 def get_native_libs(apk_path: str) -> list[str] | list:
     """
@@ -110,6 +110,9 @@ def ta_main(stats, conn, quit_flag: bool):
             # Retrieves SDK versions and shows them
             sdk_info = get_sdk_info()
 
+            # Retrieves native libraries that the app uses
+            native_libs = get_native_libs(apk_path)
+
             # Launches corresponding Android emulator
             sdk_version = 0
             if sdk_info["target"] != None:
@@ -117,13 +120,14 @@ def ta_main(stats, conn, quit_flag: bool):
             elif sdk_info["min"] != None: # If target is empty, sends min SDK version
                 sdk_version = sdk_info["min"]
 
+            # Launches the emulator
             launch_emulator(int(sdk_version), connection)
 
             # Installs, runs the app, and does the health check
             app_launch_main(apk_path, package_name, connection)
 
-            # Retrieves native libraries that the app uses
-            native_libs = get_native_libs(apk_path)
+            # Shuts down the emulator
+            shut_down_emulator()
 
             data = {
                 "apk_name": package_name,
@@ -153,8 +157,6 @@ def ta_main(stats, conn, quit_flag: bool):
             stats["counter"] += 1
             stats["total"] += 1
             connection.send(("total", stats["total"]))
-
-    shut_down_emulator()
 
     connection.send(("current", "Finished testing all APKs."))
     connection.close()

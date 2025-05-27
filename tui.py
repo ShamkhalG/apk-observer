@@ -58,6 +58,7 @@ def init_stats() -> tuple[dict, dict]:
     else: # First launch
         test_stats = {        
             "current": "N/A",
+            "counter": 1,
             "launched": 0,
             "crashed": 0,
             "total": 0
@@ -65,6 +66,7 @@ def init_stats() -> tuple[dict, dict]:
         
         scan_stats = {
             "current": "N/A",
+            "counter": 1,
             "benign": 0,
             "suspicious": 0,
             "malicious": 0,
