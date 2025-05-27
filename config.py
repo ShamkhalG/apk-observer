@@ -14,7 +14,6 @@ API_SCAN_URL = _config["VirusTotal"]["API_SCAN_URL"]
 API_REPORT_URL = _config["VirusTotal"]["API_REPORT_URL"]
 
 # Files
-COMMANDS_FILE = _config["Files"]["COMMANDS_FILE"]
 STATS_FILE = _config["Files"]["STATS_FILE"]
 
 # APK Test parameters

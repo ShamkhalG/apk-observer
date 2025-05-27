@@ -13,8 +13,6 @@ Current status and the statistics of the program are shown in a TUI (Text-based 
 
 # Files
 There are 9 python files:
-- **config.py**: Extracts global variables and configuration variables from `config.ini`.
-
 - **tui.py:** Entry point of the program. It launches **APK Tester** and **Virus Scanner** and shows their current status as well as their statistics in a TUI (Text-based User Interface). It also listens to keyboard inputs. When the user presses 'q' key, it updates the global *quit_flag* and processes terminate their work early. When terminated early, their stats are saved in `stats.txt` file. This allows them to resume from where they left during the next launch.
 
 - **test_apk.py:** Downloads an APK file using `downloader.py`, launches emulator with `emu_manager.py`, runs and verifies the app on the emulator with `app_launch.py`, and updates the database with `db_manager.py` for every downloaded APK.
@@ -25,6 +23,8 @@ There are 9 python files:
 
 - **virus_scan.py:** Scans APK files for malicious activity on the *VirusTotal* website using their API.
 - **scan_db_manager.py:** Adds scan results to the database.
+
+- **config.py**: Extracts global variables and configuration variables from `config.ini`.
 
 
 # Program Flow Diagram

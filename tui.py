@@ -14,7 +14,7 @@ import tty, termios
 from time import sleep
 from virus_scan import vs_main
 from test_apk import ta_main
-from config import COMMANDS_FILE, STATS_FILE
+from config import STATS_FILE
 
 def key_listener():
     """
@@ -100,9 +100,15 @@ def make_scan_table(stats):
     table.add_row("Total apks scanned:", str(stats.get("total", "N/A")))
     return table
 
-def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
+def tui(tui_at_conn, tui_vs_conn, test_stats: dict, scan_stats: dict):
     """
     Displays program statistics in a TUI (Text-based User Interface)
+
+    Args:
+        tui_at_conn (Connection): Connection pipe between APK tester and TUI.
+        tui_vs_conn (Connection): Connection pipe between Virus Scanner and TUI.
+        test_stats (dict): Stats for APK tester.
+        scan_stats (dict): Stats for Virus Scanner.
     """
 
     finished = [False, False] # I - APK tester, II - Virus scanner
@@ -135,12 +141,16 @@ def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
 
             # Updates status message when programs are finished
             if finished[0] == True and finished[1] == True:
-                status_message = Text("Exited the programs.", style = "bold cyan")
+                if quit_flag.value == True: # Programs exited by the user request
+                    status_message = Text("Stopped the execution early.", style = "bold cyan")
+                else: # Programs finished their work
+                    status_message = Text("Finished testing and scanning applications.", style = "bold cyan")
 
             live.update(Group(Columns([make_test_table(test_stats), make_scan_table(scan_stats)]), status_message))
             sleep(0.5)
     
-    if "counter" in test_stats and "counter" in scan_stats: # If counters were added to stats
+    # Saves stats in a .txt file
+    if quit_flag.value == True:
         with open(STATS_FILE, "w") as f:
             f.write(f"APK_TESTER: {test_stats}\n" + 
             f"VIRUS_SCANNER: {scan_stats}")
@@ -177,10 +187,6 @@ if __name__ == "__main__":
 
     # TUI 
     tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats)
-
-    # Removes the temporary file for user commands
-    if os.path.exists(COMMANDS_FILE):
-        os.remove(COMMANDS_FILE)
 
     # Restores original settings for stdin
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, orig_settings)

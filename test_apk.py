@@ -5,7 +5,7 @@ from emu_manager import launch_emulator, shut_down_emulator
 from downloader import download_apk
 from app_launch import app_launch_main
 from db_manager import db_main
-from config import AAPT_PATH, MAX_APK_NB, COMMANDS_FILE
+from config import AAPT_PATH, MAX_APK_NB
 
 def get_sdk_info() -> dict:
     """

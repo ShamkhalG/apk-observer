@@ -5,7 +5,7 @@ import time
 import requests
 from downloader import download_apk
 from scan_db_manager import db_main
-from config import API_KEY, API_SCAN_URL, API_REPORT_URL, MAX_ATTEMPT, COOLDOWN, MAX_APK_NB_VS, COMMANDS_FILE
+from config import API_KEY, API_SCAN_URL, API_REPORT_URL, MAX_ATTEMPT, COOLDOWN, MAX_APK_NB_VS
 
 def check_scan(sha256_hash: str):
     """
