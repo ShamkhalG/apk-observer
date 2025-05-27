@@ -1,15 +1,30 @@
 from rich.live import Live
 from rich.table import Table
+from rich.console import Group
 from rich.columns import Columns
+from rich.text import Text
 
 import multiprocessing as mp
 import subprocess as sp
+import threading as th
 import os
 import sys
+import select
+import tty, termios
 from time import sleep
 from virus_scan import vs_main
 from test_apk import ta_main
 from config import COMMANDS_FILE, STATS_FILE
+
+def key_listener():
+    """
+    Listens for 'q' key input from keyboard.
+    """
+    while True:
+        if select.select([sys.stdin], [], [], 0.1)[0]:
+            key = sys.stdin.read(1)
+            if key == 'q':
+                user_triggered.set()
 
 def check_ssh():
     """
@@ -91,9 +106,15 @@ def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
     """
 
     finished = [False, False] # I - APK tester, II - Virus scanner
+    status_message = Text("Press 'q' on keyboard to quit early.", style = "bold cyan")
 
     with Live("", refresh_per_second = 2) as live:
         while finished[0] == False or finished[1] == False:
+            # 'q' key is pressed
+            if user_triggered.is_set():
+                quit_flag.value = True
+                status_message = Text("Quit request acknowledged. Waiting for programs to finish their current work...", style = "bold cyan")
+
             # APK Tester
             if not finished[0]:
                 if tui_at_conn.poll(0.5): # Checks for sent data
@@ -112,7 +133,11 @@ def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
 
                     scan_stats[key] = value # Updates scan stats
 
-            live.update(Columns([make_test_table(test_stats), make_scan_table(scan_stats)]))
+            # Updates status message when programs are finished
+            if finished[0] == True and finished[1] == True:
+                status_message = Text("Exited the programs.", style = "bold cyan")
+
+            live.update(Group(Columns([make_test_table(test_stats), make_scan_table(scan_stats)]), status_message))
             sleep(0.5)
     
     if "counter" in test_stats and "counter" in scan_stats: # If counters were added to stats
@@ -125,22 +150,29 @@ def tui(tui_at_conn, tui_vs_conn, test_stats, scan_stats):
 # ////////////////////////////////////
 
 if __name__ == "__main__":
-    # Launches user_input to allow the user to enter commands (like "quit")
-    sp.Popen(["gnome-terminal", "--geometry=80x20", "--", "python3", "user_input.py"])
-
     # Checks whether the SSH key is added to the agent
     check_ssh()
+
+    # Activates thread that listens to keyboard inputs
+    user_triggered = th.Event()
+    th.Thread(target = key_listener, daemon = True).start()
+
+    # Configures stdin to read single characters without having to press "Enter"
+    orig_settings = termios.tcgetattr(sys.stdin)
+    tty.setcbreak(sys.stdin)
 
     # Creates pipes between tui and its child processes
     tui_vs_conn, vs_conn = mp.Pipe()
     tui_at_conn, at_conn = mp.Pipe()
+    quit_flag = mp.Value('b', False)
     
     # Creates the child processes and starts them
-    vs = mp.Process(target = vs_main, args = (vs_conn,))
-    ta = mp.Process(target = ta_main, args = (at_conn,))
+    vs = mp.Process(target = vs_main, args = (vs_conn, quit_flag))
+    ta = mp.Process(target = ta_main, args = (at_conn, quit_flag))
     vs.start()
     ta.start()
 
+    # Initializes stats
     test_stats, scan_stats = init_stats()
 
     # TUI 
@@ -149,3 +181,6 @@ if __name__ == "__main__":
     # Removes the temporary file for user commands
     if os.path.exists(COMMANDS_FILE):
         os.remove(COMMANDS_FILE)
+
+    # Restores original settings for stdin
+    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, orig_settings)

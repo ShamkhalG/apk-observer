@@ -7,17 +7,15 @@ Current status and the statistics of the program are shown in a TUI (Text-based 
 
 # Commands
 - Execution: `make run`
-- Adding SSH key (for current terminal session): `make ssh`
+- Adding SSH key (for current session): `make ssh`
 - Cleaning generated files: `make clean`
-- View the database using SQLite Browser: `make db`
+- Viewing the database using SQLite Browser: `make db`
 
 # Files
-There are 10 python files:
+There are 9 python files:
 - **config.py**: Extracts global variables and configuration variables from `config.ini`.
 
-- **tui.py:** Entry point of the program. It launches **APK Tester** and **Virus Scanner** and shows their current status as well as their statistics in a TUI (Text-based User Interface).
-
-- **user_input.py:** Monitors user input in a separate terminal. If the user writes *"quit"*, it writes the command in a file. As all files constantly check the file for commands, they will shutdown if they detect the *"quit"* command.
+- **tui.py:** Entry point of the program. It launches **APK Tester** and **Virus Scanner** and shows their current status as well as their statistics in a TUI (Text-based User Interface). It also listens to keyboard inputs. When the user presses 'q' key, it updates the global *quit_flag* and processes terminate their work early. When terminated early, their stats are saved in `stats.txt` file. This allows them to resume from where they left during the next launch.
 
 - **test_apk.py:** Downloads an APK file using `downloader.py`, launches emulator with `emu_manager.py`, runs and verifies the app on the emulator with `app_launch.py`, and updates the database with `db_manager.py` for every downloaded APK.
 - **downloader.py**: Downloads APK files from Androzoo using the SHA-256 hash from `latest.csv`.

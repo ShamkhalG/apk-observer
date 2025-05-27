@@ -1,4 +1,4 @@
-reset: # Removes generated files
+clean: # Removes generated files
 	rm ./test.apk ./scan.apk ./results.db ./stats.txt
 
 run: # Launches all programs

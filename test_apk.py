@@ -82,27 +82,12 @@ def get_native_libs(apk_path: str) -> list[str] | list:
 
     return ["ERROR"]
 
-def quit_requested() -> bool:
-    """
-    Checks if the file contains "quit" command from the user.
-
-    Returns:
-        Bool:
-            - **True:** If the file contains "quit" command.
-            - **False:** If the file contains something else or doesn't exist.
-    """
-    try:
-        with open(COMMANDS_FILE, "r") as f:
-            return f.read().strip().lower() == "quit"
-    except FileNotFoundError:
-        return False
-
 # ////////////////////////////////////
 # /////////////// MAIN ///////////////
 # ////////////////////////////////////
 connection = None
 
-def ta_main(conn):
+def ta_main(conn, quit_flag: bool):
     # Making the connection global to all functions
     global connection
     connection = conn
@@ -117,8 +102,8 @@ def ta_main(conn):
 
     while stats["app_number"] <= MAX_APK_NB:
         try:
-            # Checks if the user requested manual shutdown
-            if quit_requested():
+            # Checks if the quit flag is triggered
+            if quit_flag.value == True:
                 connection.send(("current", "Exited early due to user request."))
                 connection.send(("counter", stats["app_number"])) # Sends the "app_number" to save it in a 
                 break

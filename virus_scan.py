@@ -111,27 +111,12 @@ def get_label(positives: int) -> str:
     else:
         return "MALICIOUS"
 
-def quit_requested() -> bool:
-    """
-    Checks if the file contains "quit" command from the user.
-
-    Returns:
-        Bool:
-            - **True:** If the file contains "quit" command.
-            - **False:** If the file contains something else or doesn't exist.
-    """
-    try:
-        with open(COMMANDS_FILE, "r") as f:
-            return f.read().strip().lower() == "quit"
-    except FileNotFoundError:
-        return False
-
 # ////////////////////////////////////
 # /////////////// MAIN ///////////////
 # ////////////////////////////////////
 connection = None
 
-def vs_main(conn):
+def vs_main(conn, quit_flag: bool):
     # Making the connection global to all functions
     global connection
     connection = conn
@@ -147,8 +132,8 @@ def vs_main(conn):
 
     while stats["app_number"] <= MAX_APK_NB_VS:
         try:
-            # Checks if the user requested manual shutdown
-            if quit_requested():
+            # Checks if the quit flag is triggered
+            if quit_flag.value == True:
                 connection.send(("current", "Exited early due to user request."))
                 connection.send(("counter", stats["app_number"])) # Sends the stats["app_number"] to save it
                 break
