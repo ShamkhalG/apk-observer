@@ -39,7 +39,7 @@ def check_ssh():
 
 def init_stats() -> tuple[dict, dict]:
     """
-    Reads stats from **stats.txt** file. 
+    Reads stats from the file. 
     If it doesn't exist, then initializes stats to default zeroed values.
 
     Returns:
@@ -170,7 +170,7 @@ def tui(tui_at_conn, tui_vs_conn, test_stats: dict, scan_stats: dict):
 # ////////////////////////////////////
 
 if __name__ == "__main__":
-    # Writes down all errors to 
+    # Writes all error logs to a file
     sys.stderr = open(ERRORS_FILE, "w")
     
     # Checks whether the SSH key is added to the agent
