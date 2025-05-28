@@ -44,10 +44,8 @@ def install_apk(apk_path: str):
     try:
         sp.run([ADB_PATH, "install", "-r", apk_path], stdout = sp.PIPE, stderr = sp.STDOUT, text = True, check = True)
     except sp.CalledProcessError as e:
-        if "INSTALL_FAILED_MISSING_SPLIT" in e.output:
-            raise RuntimeError("Error: App install failed. Missing required split APKs.")
-        connection.send(("current", f"ERROR: Failed to execute 'adb install': {e.output}"))
-        sys.exit(1)
+        connection.send(("current", f"Error: Failed to execute 'adb install'.\nReason: {e.output}"))
+        raise RuntimeError(f"Error: App install failed. Reason:\n{e.output}")
     except Exception as e:
         connection.send(("current", f"ERROR: Unexpected failure while installing the APK: {e}"))
         sys.exit(1)

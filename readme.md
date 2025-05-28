@@ -37,7 +37,6 @@ SSH_KEY_PATH=*path_to_ssh_key_located_in_.ssh_directory*
 - Viewing the database using SQLite Browser: `make db`
 
 # Files
-There are 9 python files:
 - **tui.py**  
 Entry point of the program. It launches **APK Tester** and **Virus Scanner**, displaying their status and statistics in a TUI (Text-based User Interface). <br> It also listens for keyboard input - pressing `'q'` key sets a global `quit_flag` to terminate both processes early. When terminated, the current statistics are saved to a file. This allows the processes to resume from where they stopped during the next launch.
 <br>
@@ -63,8 +62,12 @@ Adds scan results to the database.
 <br>
 <br>
 
-- **config.py:**  
+- **config.py**  
 Loads global settings and paths from `config.ini` and environment variables from `.env`.
+- **stats.txt**  
+Contains statistics of both programs that allow them to continue from where they stopped.
+- **errors.txt**
+Contains all error logs from the programs.
 
 See the **Program Flow Diagram** section for an overview of how these files interact.
 
