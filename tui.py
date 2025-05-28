@@ -61,6 +61,7 @@ def init_stats() -> tuple[dict, dict]:
             "counter": 1,
             "launched": 0,
             "crashed": 0,
+            "not_installed": 0,
             "total": 0
         }
         
@@ -87,9 +88,10 @@ def make_test_table(stats):
     table.add_column("Metric")
     table.add_column("Value", width = 35)
 
-    table.add_row("Current status:\n\n", str(stats.get("current", "N/A")))
+    table.add_row("Current status:\n", str(stats.get("current", "N/A")))
     table.add_row("Apps launched:", str(stats.get("launched", "N/A")))
     table.add_row("Apps crashed:", str(stats.get("crashed", "N/A")))
+    table.add_row("Apps not installed:", str(stats.get("not_installed", "N/A")))
     table.add_row("Total apks tested:", str(stats.get("total", "N/A")))
     return table
 
@@ -128,7 +130,7 @@ def tui(tui_at_conn, tui_vs_conn, test_stats: dict, scan_stats: dict):
 
     with Live("", refresh_per_second = 10) as live:
         while finished[0] == False or finished[1] == False:
-            # 'q' key is pressed
+            # 'q' key is pressed, requesting early exit
             if user_triggered.is_set():
                 quit_flag.value = True
                 status_message = Text("Quit request acknowledged. Waiting for programs to finish their current work...", style = "bold cyan")
@@ -162,10 +164,9 @@ def tui(tui_at_conn, tui_vs_conn, test_stats: dict, scan_stats: dict):
             sleep(0.5)
     
     # Saves stats in a .txt file
-    if quit_flag.value == True:
-        with open(STATS_FILE, "w") as f:
-            f.write(f"{test_stats}\n" + 
-            f"{scan_stats}")
+    with open(STATS_FILE, "w") as f:
+        f.write(f"{test_stats}\n" + 
+        f"{scan_stats}")
 
 # ////////////////////////////////////
 # ///////// ENTRY POINT MAIN /////////

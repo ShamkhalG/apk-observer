@@ -13,7 +13,8 @@ def check_apk_exists(apk_path: str):
     """
 
     if not os.path.isfile(apk_path):
-        raise RuntimeError(f"ERROR: APK file not found at {apk_path}.")
+        connection.send(("current", f"ERROR: APK file not found at {apk_path}."))
+        sys.exit(1)
 
 def check_emulator():
     """
@@ -43,6 +44,8 @@ def install_apk(apk_path: str):
     try:
         sp.run([ADB_PATH, "install", "-r", apk_path], stdout = sp.PIPE, stderr = sp.STDOUT, text = True, check = True)
     except sp.CalledProcessError as e:
+        if "INSTALL_FAILED_MISSING_SPLIT" in e.output:
+            raise RuntimeError("Error: App install failed. Missing required split APKs.")
         connection.send(("current", f"ERROR: Failed to execute 'adb install': {e.output}"))
         sys.exit(1)
     except Exception as e:
@@ -78,11 +81,13 @@ def check_installation(package_name: str):
     try:
         result = sp.run([ADB_PATH, "shell", "pm", "list", "packages"], stdout = sp.PIPE, stderr = sp.STDOUT, text = True, check = True)
         if package_name not in result.stdout:
-            raise RuntimeError("ERROR: Package is NOT installed.")
+            raise RuntimeError("ERROR: Package is not installed.")
     except sp.CalledProcessError as e:
         connection.send(("current", f"ERROR: Failed to execute 'adb shell pm list packages': {e.output}"))
         sys.exit(1)
     except Exception as e:
+        if isinstance(e, RuntimeError):
+            raise RuntimeError("Error: Package is not installed.")
         connection.send(("current", f"ERROR: Unexpected failure while checking for installation: {e}"))
         sys.exit(1)
 
@@ -114,6 +119,8 @@ def check_crash_log(package_name: str):
         connection.send(("current", f"ERROR: Failed to execute 'adb logcat -t 0': {e.output}"))
         sys.exit(1)
     except Exception as e:
+        if isinstance(e, RuntimeError):
+            raise RuntimeError("Error: App crashed.")
         connection.send(("current", f"ERROR: Unexpected failure while checking for crash logs: {e}"))
         sys.exit(1)
 
@@ -137,6 +144,8 @@ def check_app_pid(package_name: str):
         connection.send(("current", f"ERROR: Failed to execute 'adb shell pidof': {e.output}"))
         sys.exit(1)
     except Exception as e:
+        if isinstance(e, RuntimeError):
+            raise RuntimeError("Error: App is not running.")
         connection.send(("current", f"ERROR: Unexpected failure while checking for PID: {e}"))
         sys.exit(1)
     

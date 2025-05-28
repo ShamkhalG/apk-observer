@@ -15,14 +15,17 @@ AAPT_PATH = os.path.expanduser(_config["Paths"]["AAPT_PATH"])
 # VirusTotal API parameters
 API_KEY = os.getenv("API_KEY")
 API_SCAN_URL = os.getenv("API_SCAN_URL")
-API_REPORT_URL = API_SCAN_URL = os.getenv("API_REPORT_URL")
+API_REPORT_URL = os.getenv("API_REPORT_URL")
+
+# SSH key path
+SSH_KEY_PATH = os.path.expanduser(os.getenv("SSH_KEY_PATH"))
 
 # Files
 STATS_FILE = _config["Files"]["STATS_FILE"]
 ERRORS_FILE = _config["Files"]["ERRORS_FILE"]
 
 # APK Test parameters
-MAX_APK_NB = int(_config["APK_Test"]["MAX_APK_NB"])
+MAX_APK_NB_TA = int(_config["APK_Test"]["MAX_APK_NB_TA"])
 
 # Virus Scan parameters
 MAX_APK_NB_VS = int(_config["Virus_Scan"]["MAX_APK_NB_VS"])

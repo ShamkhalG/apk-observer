@@ -1,12 +1,11 @@
 import subprocess as sp
 import zipfile as zp
-import sys
 
 from emu_manager import launch_emulator, shut_down_emulator
 from downloader import download_apk
 from app_launch import app_launch_main
 from db_manager import db_main
-from config import AAPT_PATH, MAX_APK_NB
+from config import AAPT_PATH, MAX_APK_NB_TA
 
 def get_package_name(apk_path: str) -> str:
     """
@@ -93,7 +92,7 @@ def ta_main(stats, conn, quit_flag: bool):
     global connection
     connection = conn
 
-    while stats["counter"] <= MAX_APK_NB:
+    while stats["counter"] <= MAX_APK_NB_TA:
         try:
             # Checks if the quit flag is triggered
             if quit_flag.value == True:
@@ -127,9 +126,6 @@ def ta_main(stats, conn, quit_flag: bool):
             # Installs, runs the app, and does the health check
             app_launch_main(apk_path, package_name, connection)
 
-            # Shuts down the emulator
-            shut_down_emulator()
-
             data = {
                 "apk_name": package_name,
                 "sha256_hash": sha256_hash,
@@ -150,14 +146,20 @@ def ta_main(stats, conn, quit_flag: bool):
             stats["launched"] += 1
             connection.send(("launched", stats["launched"]))
         except RuntimeError as e:
-            if e == "Error: App crashed." or e == "Error: App is not running.":
+            if str(e) in ["Error: App crashed.", "Error: App is not running."]: # App crashed or not running
                 stats["crashed"] += 1
-                connection.send(("crashed", stats["crashed"]))    
+                connection.send(("crashed", stats["crashed"]))
+            else: # App was not installed correctly or misses split APKs
+                stats["not_installed"] += 1
+                connection.send(("not_installed", stats["not_installed"]))
             connection.send(("current", e))
         finally:
             stats["counter"] += 1
             stats["total"] += 1
             connection.send(("total", stats["total"]))
+
+            # Shuts down the emulator
+            shut_down_emulator()
 
     connection.send(("counter", stats["counter"]))
     connection.send(("current", "Finished testing all APKs."))

@@ -1,0 +1,6 @@
+configparser
+keyboard==0.13.5
+psutil==5.9.8
+python-dotenv==1.1.0
+requests==2.31.0
+rich==13.7.1

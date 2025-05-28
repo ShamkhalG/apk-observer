@@ -80,7 +80,7 @@ def start_emulator(avd: str):
 
     connection.send(("current", f"Starting emulator '{avd}'..."))
     sp.Popen([EMULATOR_PATH, "-avd", avd, 
-              "-wipe-data", "-no-snapshot-load", "-no-boot-anim", 
+              "-wipe-data", "-no-snapshot-load", "-no-snapshot-save", "-no-boot-anim", 
               "-netdelay", "none", 
               "-netspeed", "full", "-gpu", "host", "-no-window"], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
 
