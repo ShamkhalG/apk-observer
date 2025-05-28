@@ -18,6 +18,7 @@ def create_table(cursor):
             "sdk_version TEXT," +
             "max_sdk_version TEXT," +
             "native_libs TEXT," +
+            "outcome TEXT," +
             "scan_label TEXT," +
             "positives INTEGER," +
             "total_engines INTEGER," +
@@ -37,12 +38,12 @@ def insert_row(cursor, connection, data: dict):
 
     cursor.execute(
         "INSERT INTO apk_info (apk_name, sha256_hash, min_sdk_version, sdk_version, max_sdk_version," + 
-        "native_libs, scan_label, positives, total_engines, test_time, scan_time)" + 
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+        "native_libs, outcome, scan_label, positives, total_engines, test_time, scan_time)" + 
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
             (data["apk_name"], data["sha256_hash"], data["min_sdk_version"], 
             data["sdk_version"], data["max_sdk_version"], data["native_libs"], 
-            data["scan_label"], data["positives"], data["total_engines"], 
-            data["test_time"], data["scan_time"]))
+            data["outcome"], data["scan_label"], data["positives"], 
+            data["total_engines"], data["test_time"], data["scan_time"]))
         
     connection.commit()
 

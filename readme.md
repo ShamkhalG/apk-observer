@@ -71,5 +71,12 @@ Contains all error logs from the programs.
 
 See the **Program Flow Diagram** section for an overview of how these files interact.
 
+# Notes
+For debugging purposes, there are two notations of errors:
+1. **Error** _(first letter uppercase, others lowercase):_ Error is related to the APK itself. It could be due to ADV version being mismatched with APK's target or minimum SDK version (if incorrect emulators are installed). Otherwise, the APK itself is corrupt or misses additional APKs and it's impossible to resolve the error.
+2. **ERROR** _(all capital letters):_ Error is due to the misconfiguration in the program. It could be due to incorrect paths or missing files in the system.
+
+Outcome of APKs are added to the database under *outcome* column (success or not). If they crashed or weren't installed properly, the reason will be indicated there. 
+
 # Program Flow Diagram
 ![Program Flow Diagram](./diagram.png)

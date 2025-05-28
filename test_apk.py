@@ -92,6 +92,7 @@ def ta_main(stats, conn, quit_flag: bool):
     global connection
     connection = conn
 
+    outcome = "Launched successfully"
     while stats["counter"] <= MAX_APK_NB_TA:
         try:
             # Checks if the quit flag is triggered
@@ -124,23 +125,7 @@ def ta_main(stats, conn, quit_flag: bool):
             launch_emulator(int(sdk_version), connection)
 
             # Installs, runs the app, and does the health check
-            app_launch_main(apk_path, package_name, connection)
-
-            data = {
-                "apk_name": package_name,
-                "sha256_hash": sha256_hash,
-                "min_sdk_version": sdk_info["min"],
-                "sdk_version": sdk_info["target"],
-                "max_sdk_version": sdk_info["max"],
-                "native_libs": ", ".join(native_libs) if native_libs else "", # If list is empty, put empty string
-                "scan_label": "PENDING",
-                "positives": "PENDING",
-                "total_engines": "PENDING",
-                "scan_time": "PENDING"
-            }
-
-            # Updates the database
-            db_main(data, connection)
+            app_launch_main(apk_path, package_name, connection)            
 
             # Updates TUI
             stats["launched"] += 1
@@ -152,11 +137,30 @@ def ta_main(stats, conn, quit_flag: bool):
             else: # App was not installed correctly or misses split APKs
                 stats["not_installed"] += 1
                 connection.send(("not_installed", stats["not_installed"]))
+            
             connection.send(("current", e))
+            outcome = str(e)
         finally:
             stats["counter"] += 1
             stats["total"] += 1
             connection.send(("total", stats["total"]))
+
+            data = {
+                "apk_name": package_name,
+                "sha256_hash": sha256_hash,
+                "min_sdk_version": sdk_info["min"],
+                "sdk_version": sdk_info["target"],
+                "max_sdk_version": sdk_info["max"],
+                "native_libs": ", ".join(native_libs) if native_libs else "", # If list is empty, put empty string
+                "outcome": outcome,
+                "scan_label": "PENDING",
+                "positives": "PENDING",
+                "total_engines": "PENDING",
+                "scan_time": "PENDING"
+            }
+
+            # Updates the database
+            db_main(data, connection)
 
             # Shuts down the emulator
             shut_down_emulator()
