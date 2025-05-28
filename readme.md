@@ -6,7 +6,7 @@ This program automates the testing and scanning of Android APK files. It consist
 Program status, test and scan results are shown through a TUI (Text-based User Interface). In addition, the results are stored in a database for further analysis.
 
 # Prerequisites
-1. Download and install Android Studio must be installed on the computer.
+1. Download and install Android Studio.
 2. Install 12 Android Virtual Devices with following names and Android versions:
 - _**A4:** 4.4, **A5:** 5.1, **A6:** 6.0, **A7:** 7.1.1,_
 - _**A8:** 8.1, **A9:** 9.0, **A10:** 10.0, **A11:** 11.0,_
@@ -16,15 +16,15 @@ Program status, test and scan results are shown through a TUI (Text-based User I
 
 ```
 API_KEY=*api_key*
-API_SCAN_URL=*scan_url*
-API_REPORT_URL=*report_url*
 
 SSH_KEY_PATH=*path_to_ssh_key_located_in_.ssh_directory*
 ```
 **Warning:** Do not put any spaces around = sign!
 
 5. Install required dependencies using `pip install -r requirements.txt`.
-6. Install SQLite Browser (optional, to view the database).
+6. Download `latest.csv.gz` file from the website `https://androzoo.uni.lu/api_doc`. Extract `latest.csv` file from it and put it in the project directory.
+7. Check `config.ini` file and make sure that paths to emulator, ADB and AAPT are valid for your system.
+8. Install SQLite Browser (optional, to view the database).
 
 # Execution
 1. Add the SSH key to the agent using `make ssh`. It reads the file **./ssh_key** located at the **.ssh** directory.

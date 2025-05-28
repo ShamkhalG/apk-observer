@@ -14,8 +14,8 @@ AAPT_PATH = os.path.expanduser(_config["Paths"]["AAPT_PATH"])
 
 # VirusTotal API parameters
 API_KEY = os.getenv("API_KEY")
-API_SCAN_URL = os.getenv("API_SCAN_URL")
-API_REPORT_URL = os.getenv("API_REPORT_URL")
+API_SCAN_URL = _config["API_URLs"]["API_SCAN_URL"]
+API_REPORT_URL = _config["API_URLs"]["API_REPORT_URL"]
 
 # SSH key path
 SSH_KEY_PATH = os.path.expanduser(os.getenv("SSH_KEY_PATH"))
